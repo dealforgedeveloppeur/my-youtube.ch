@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Youtube</title>
+    <link rel="icon" href="/Web/Images/Youtube.ico" type="image/x-icon">
+    <style>***style***</style>
+</head>
+<body>
+    <div class="top-bar">
+        <select id="liste_deroulante" onchange="toggleSearchBar()">
+            <option value="today" selected>Aujourd'hui</option>
+            <option value="yesterday">Hier</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois</option>
+            <option value="year">Cette année</option>
+            <option value="all">Tout</option>
+            <option value="single">Le ...</option>
+            <option value="range">Du ... au ...</option>
+            <option value="watchlater">À regarder plus tard</option>
+            <option value="downloadvideos">Vidéos téléchargées</option>
+        </select>
+        <div id="date_inputs" style="display:none;">
+            <input type="date" id="date_1" style="display:none;">
+            <input type="date" id="date_21" style="display:none;">
+            <input type="date" id="date_22" style="display:none;">
+        </div>
+        <input type="text" id="titleSearch" placeholder="Titre...">
+        <input type="text" id="durationMin" placeholder="Durée" oninput="toggleMaxDuration()">
+        <input type="text" id="durationMax" placeholder="Durée max" style="display:none;">
+        <div class="dropdown" id="dropdown">
+            <button type="button" class="dropdown-button" onclick="toggleDropdown(event)">Youtubeurs</button>
+            <div class="dropdown-content" id="dropdownContent">
+                <div class="grid-checkbox">
+                    ***ListOfYoutubeurs***
+                </div>
+            </div>
+        </div>
+        <button id="search" onclick="sendSearch()">Search</button>
+        <div class="yt-search-container">
+            <input type="text" id="ytSearchInput" class="yt-search-input" placeholder="Rechercher..." onkeydown="if(event.key === 'Enter') searchOnYoutube(this.value)">
+            <button class="yt-search-btn" onclick="searchOnYoutube(document.getElementById('ytSearchInput').value)" title="Rechercher sur YouTube">
+                <svg class="yt-search-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <div class="scroller" id="video-scroller"></div>
+    <div id="loading-container" style="display: none;">
+        <div class="loading-overlay">
+            <div class="loader"></div>
+            <p>Chargement des vidéos...</p>
+        </div>
+    </div>
+    <template id="card-template">
+        <div class="video-card">
+            <div class="thumbnail-wrapper">
+                <img class="thumbnail" src="" alt="Miniature">
+                <div class="overlay-icons">
+                    <img class="icon later-icon" src="/Web/Images/Later.ico" title="Plus tard">
+                    <img class="icon download-icon" src="/Web/Images/Download.ico" title="Télécharger">
+                </div>
+            </div>
+            <div class="card-info">
+                <h3 class="text"></h3>
+                <div class="meta">
+                    <span class="duration"></span>
+                    <span class="dot"></span>
+                    <span class="category">Vidéo</span>
+                </div>
+            </div>
+        </div>
+    </template>
+    <script>***script***</script>
+</body>
+</html>
