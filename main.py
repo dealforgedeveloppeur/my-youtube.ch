@@ -1,4 +1,4 @@
-import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, urllib.request, sqlite3, re, random, subprocess
+import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, urllib.request, re, random, subprocess
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
 from fastapi.middleware.cors import CORSMiddleware
