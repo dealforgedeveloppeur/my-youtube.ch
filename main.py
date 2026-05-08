@@ -6,7 +6,6 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from urllib.parse import unquote
-from PIL import Image
 
 
 def CompileWebFiles():
