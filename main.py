@@ -181,15 +181,15 @@ async def check_token(request: Request):
         if match:
             session_token = match.group(1)
     if not session_token:
-        raise RedirectResponse(url="/Login", status_code=301)
+        raise HTTPException(status_code=301, headers={"Location": "/Login"})
     try:
         payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
         username: str = payload.get("sub")
         if username is None:
-            raise RedirectResponse(url="/Login", status_code=301)
+            raise HTTPException(status_code=301, headers={"Location": "/Login"})
         return username
     except JWTError:
-        raise RedirectResponse(url="/Login", status_code=301)
+        raise HTTPException(status_code=301, headers={"Location": "/Login"})
 
 
 @app.post("/CreateUser")
