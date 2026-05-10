@@ -174,7 +174,15 @@ def create_token(data: dict):
     return jwt.encode(to_encode, secret_key, algorithm=algorithm)
 
 
-async def check_token(session_token: Optional[str] = Cookie(None)):
+async def check_token(request: Request):
+    cookie_header = request.headers.get("cookie")
+    print(f"DEBUG - Header Cookie brut : {cookie_header}")
+    session_token = None
+    if cookie_header:
+        match = re.search(r'(?:^|;\s*)session_token=([^;]*)', cookie_header)
+        if match:
+            session_token = match.group(1)
+    print(f"DEBUG - Token extrait manuellement : {session_token}")
     if not session_token:
         raise HTTPException(status_code=401, detail="Non connecté.")
     try:
@@ -196,7 +204,7 @@ def create_new_user(content: dict, response: Response):
         datas = {"password": pwd_context.hash(no_rainbow_tables + content.get("password")), "youtubeurs": ["@Aywen", "@VUFranceTV"]}
         json.dump(datas, f, indent=2, ensure_ascii=False)
     token = create_token(data={"sub": email})
-    response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=False)
+    response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=True, path="/")
     return {"message": "Utilisateur créé avec succès."}
 
 
@@ -206,7 +214,7 @@ def login(content: dict, response: Response):
     with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
         if pwd_context.verify(no_rainbow_tables + content.get("password"), json.load(f)["password"]):
             token = create_token(data={"sub": email})
-            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=False)
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=True, path="/")
             return {"message": "Connexion réussie"}
     raise HTTPException(status_code=401, detail="Identifiants incorrects.")
 
