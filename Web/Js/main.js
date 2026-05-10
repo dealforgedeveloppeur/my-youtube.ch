@@ -93,8 +93,9 @@ function renderNextVideos(isInitial = false) {
 }
 
 function communication(dict, where) {
-    return fetch(`https://app.astrovoice.ch/${where}`, {
+    return fetch(`https://app.astrovoice.ch/my-youtube/${where}`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dict)
     });

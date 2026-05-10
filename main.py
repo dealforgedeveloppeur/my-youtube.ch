@@ -168,7 +168,7 @@ async def startup_event():
 
 def create_token(data: dict):
     to_encode = data.copy()
-    to_encode.update({"exp": datetime.utcnow() + timedelta(days=access_token_expire_days)})
+    to_encode.update({"exp": datetime.datetime.utcnow() + datetime.timedelta(days=access_token_expire_days)})
     return jwt.encode(to_encode, secret_key, algorithm=algorithm)
 
 
@@ -186,13 +186,13 @@ async def check_token(session_token: Optional[str] = Cookie(None)):
 
 
 @app.post("/CreateUser")
-def create_new_user(content: dict):
+def create_new_user(content: dict, response: Response):
     email = content.get("email")
     if os.path.exists(f"Users/{email}.json"):
         return {"message": "Utilisateur existant."}
     with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
         datas = {"password": pwd_context.hash(no_rainbow_tables + content.get("password"))}
-        f.write(json.loads(datas))
+        json.dump(datas, f, indent=2, ensure_ascii=False)
     token = create_token(data={"sub": email})
     response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=False)
     return {"message": "Utilisateur créé avec succès."}
