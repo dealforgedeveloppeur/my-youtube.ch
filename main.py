@@ -280,6 +280,11 @@ def send_youtubeurs(username: str = Depends(check_token)):
 
 
 @app.get("/", response_class=HTMLResponse)
-def BaseFile():#username: str = Depends(check_token)):
-    with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
-        return BaseFile.read()
+def BaseFile():
+    username = Depends(check_token)
+    if username:
+        with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
+            return BaseFile.read()
+    else:
+        with open("Web/Compilated/login.html", "r", encoding="utf-8") as BaseFile:
+            return BaseFile.read()
