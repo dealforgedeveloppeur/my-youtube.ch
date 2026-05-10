@@ -191,7 +191,7 @@ def create_new_user(content: dict, response: Response):
     if os.path.exists(f"Users/{email}.json"):
         return {"message": "Utilisateur existant."}
     with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
-        datas = {"password": pwd_context.hash(no_rainbow_tables + content.get("password"))}
+        datas = {"password": pwd_context.hash(no_rainbow_tables + content.get("password")), "youtubeurs": ["@Aywen", "@VUFranceTV"]}
         json.dump(datas, f, indent=2, ensure_ascii=False)
     token = create_token(data={"sub": email})
     response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=False)
@@ -263,7 +263,14 @@ def search_youtube(content: dict, username: str = Depends(check_token)):
     return videos
 
 
+@app.post("/GetYoutubeurs")
+def send_youtubeurs(username: str = Depends(check_token)):
+    with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
+        youtubeurs = json.loads(f)["youtubeurs"]
+        return youtubeurs
+
+
 @app.get("/", response_class=HTMLResponse)
 def BaseFile(username: str = Depends(check_token)):
     with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
-        return BaseFile.read()
+        return BaseFile.read().replace()
