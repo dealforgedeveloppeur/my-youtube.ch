@@ -102,11 +102,11 @@ function communication(dict, where) {
 }
 
 async function chargerYoutubeurs() {
-    const youtubeurs = await communication({}, 'GetYoutubeurs');
+    const response = await communication({}, 'GetYoutubeurs');
+    const youtubeurs = await response.json();
     const grid = document.querySelector('.grid-checkbox');
     grid.innerHTML = youtubeurs.map(y => `<label><input type="checkbox" name="creator" value="${y}"> ${y}</label>`).join('\n');
 }
-
 async function sendSearch() {
     const scroller = document.getElementById('video-scroller');
     const loader = document.getElementById('loading-container');
@@ -128,7 +128,7 @@ async function sendSearch() {
         }
     };
     try {
-        const response = await communication({email: "mathias.trz@eduge.ch", password: "mypassword"}, 'CreateUser');
+        const response = await communication(payload, 'Youtube');
         await new Promise(resolve => setTimeout(resolve, 300));
         if (response.ok) {
             const results = await response.json();

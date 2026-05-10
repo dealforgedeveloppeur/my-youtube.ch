@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyYoutube - Login</title>
+    <style>***style***</style>
+    <script src="https://js.stripe.com/v3/">***script***</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-grid"></div>
+    <div class="auth-container">
+        <div class="auth-card" id="authCard">
+            <div class="logo-section">
+                <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 4C11.16 4 4 11.16 4 20s7.16 16 16 16 16-7.16 16-16S28.84 4 20 4z" fill="none" stroke="#FF6D5A" stroke-width="3"/>
+                    <path d="M12 20c0-4.42 3.58-8 8-8s8 3.58 8 8-3.58 8-8 8" fill="none" stroke="#FF6D5A" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="20" cy="20" r="4" fill="#FF6D5A"/>
+                </svg>
+                <span class="logo-text">n8n</span>
+            </div>
+            <div class="form-state" id="stateLogin">
+                <h1 class="form-title">Connectez-vous à votre compte</h1>
+                <p class="form-subtitle">Entrez vos identifiants pour continuer</p>
+                <form id="loginForm" novalidate>
+                    <div class="input-group">
+                        <label for="loginEmail" class="input-label">Adresse email</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2.94 6.5A2 2 0 012 4.5V4a2 2 0 012-2h12a2 2 0 012 2v.5a2 2 0 01-.94 1.5L10 11 2.94 6.5zM2 7.88V16a2 2 0 002 2h12a2 2 0 002-2V7.88l-6.7 4.28a1 1 0 01-1.1 0L2 7.88z"/></svg>
+                            <input type="email" id="loginEmail" class="input-field" placeholder="vous@exemple.com" required autocomplete="email">
+                        </div>
+                        <span class="input-error" id="loginEmailError"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="loginPassword" class="input-label">Mot de passe</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a5 5 0 00-5 5v2H4a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 7V6a3 3 0 116 0v2H7zm3 4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clip-rule="evenodd"/></svg>
+                            <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="toggle-password" id="toggleLoginPassword" aria-label="Afficher le mot de passe">
+                                <svg class="eye-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 4C4 4 1 10 1 10s3 6 9 6 9-6 9-6-3-6-9-6zm0 10a4 4 0 110-8 4 4 0 010 8z"/><circle cx="10" cy="10" r="2"/></svg>
+                            </button>
+                        </div>
+                        <span class="input-error" id="loginPasswordError"></span>
+                    </div>
+                    <button type="submit" class="btn-primary" id="loginBtn">
+                        <span class="btn-text">Se connecter</span>
+                        <span class="btn-spinner" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.3"/><path d="M2 12a10 10 0 0119.8-2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                        </span>
+                    </button>
+                </form>
+                <p class="switch-text">Pas encore de compte ? <a href="#" class="switch-link" id="goToRegister">Créer un compte</a></p>
+            </div>
+            <div class="form-state" id="stateRegister" style="display:none;">
+                <h1 class="form-title">Créez votre compte</h1>
+                <p class="form-subtitle">Profitez du YouTube dont vous avez toujours rêvé.</p>
+                <form id="registerForm" novalidate>
+                    <div class="input-group">
+                        <label for="regUsername" class="input-label">Nom d'utilisateur</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 8a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                            <input type="text" id="regUsername" class="input-field" placeholder="jean.dupont" required autocomplete="username" minlength="3">
+                        </div>
+                        <span class="input-error" id="regUsernameError"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="regEmail" class="input-label">Adresse email</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2.94 6.5A2 2 0 012 4.5V4a2 2 0 012-2h12a2 2 0 012 2v.5a2 2 0 01-.94 1.5L10 11 2.94 6.5zM2 7.88V16a2 2 0 002 2h12a2 2 0 002-2V7.88l-6.7 4.28a1 1 0 01-1.1 0L2 7.88z"/></svg>
+                            <input type="email" id="regEmail" class="input-field" placeholder="vous@exemple.com" required autocomplete="email">
+                        </div>
+                        <span class="input-error" id="regEmailError"></span>
+                    </div>
+                    <div class="input-group">
+                        <label for="regPassword" class="input-label">Mot de passe</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a5 5 0 00-5 5v2H4a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 7V6a3 3 0 116 0v2H7zm3 4a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clip-rule="evenodd"/></svg>
+                            <input type="password" id="regPassword" class="input-field" placeholder="••••••••" required autocomplete="new-password" minlength="8">
+                            <button type="button" class="toggle-password" id="toggleRegPassword" aria-label="Afficher le mot de passe">
+                                <svg class="eye-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 4C4 4 1 10 1 10s3 6 9 6 9-6 9-6-3-6-9-6zm0 10a4 4 0 110-8 4 4 0 010 8z"/><circle cx="10" cy="10" r="2"/></svg>
+                            </button>
+                        </div>
+                        <span class="input-error" id="regPasswordError"></span>
+                    </div>
+                    <button type="submit" class="btn-primary" id="registerBtn">
+                        <span class="btn-text">Créer un compte</span>
+                        <span class="btn-spinner" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.3"/><path d="M2 12a10 10 0 0119.8-2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                        </span>
+                    </button>
+                </form>
+                <p class="switch-text">
+                    Déjà un compte ? <a href="#" class="switch-link" id="goToLogin">Se connecter</a>
+                </p>
+            </div>
+            <div class="form-state" id="stateVerify" style="display:none;">
+                <h1 class="form-title">Vérifiez votre email</h1>
+                <p class="form-subtitle" id="verifyEmailDisplay">Nous avons envoyé un code à 6 chiffres à <strong>votre@email.com</strong></p>
+                <form id="verifyForm" novalidate>
+                    <div class="code-input-container" id="codeInputContainer">
+                        <input type="text" class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="0" required>
+                        <input type="text" class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="1" required>
+                        <input type="text" class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="2" required>
+                        <input type="text" class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="3" required>
+                        <input type="text" class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="4" required>
+                        <input type="text" class="code-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" data-index="5" required>
+                    </div>
+                    <span class="input-error" id="verifyCodeError"></span>
+                    <button type="submit" class="btn-primary" id="verifyBtn">
+                        <span class="btn-text">Vérifier le code</span>
+                        <span class="btn-spinner" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.3"/><path d="M2 12a10 10 0 0119.8-2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                        </span>
+                    </button>
+                </form>
+                <p class="switch-text">Vous n'avez pas reçu le code ? <a href="#" class="switch-link" id="resendCode">Renvoyer le code</a></p>
+                <p class="switch-text" style="margin-top:4px;"><a href="#" class="switch-link switch-link--subtle" id="backToRegisterFromVerify">← Modifier mes informations</a></p>
+            </div>
+            <div class="form-state" id="statePayment" style="display:none;">
+                <div class="verified-badge">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                    <span>Email vérifié avec succès</span>
+                </div>
+                <h1 class="form-title">Finalisez votre inscription</h1>
+                <p class="form-subtitle">Choisissez votre plan et procédez au paiement</p>
+                <div class="plan-summary">
+                    <div class="plan-badge">🔥 Le plus populaire</div>
+                    <div class="plan-details">
+                        <span class="plan-name">1 mois</span>
+                        <div class="plan-price">
+                            <span class="plan-amount">2€</span>
+                            <span class="plan-period">/mois</span>
+                        </div>
+                    </div>
+                </div>
+                <form id="paymentForm" novalidate>
+                    <div class="input-group">
+                        <label for="cardElement" class="input-label">Informations de paiement</label>
+                        <div id="cardElement" class="stripe-card-element"></div>
+                        <span class="input-error" id="cardError"></span>
+                    </div>
+                    <button type="submit" class="btn-primary btn-payment" id="paymentBtn">
+                        <span class="btn-text">Payer 2€</span>
+                        <span class="btn-spinner" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity="0.3"/><path d="M2 12a10 10 0 0119.8-2" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+                        </span>
+                    </button>
+                </form>
+                <div class="stripe-badge">
+                    <svg viewBox="0 0 40 16" fill="none"><rect x="0.5" y="0.5" width="39" height="15" rx="2" stroke="#ddd"/><text x="20" y="12" text-anchor="middle" font-size="7" fill="#888" font-family="Inter,sans-serif">🔒 Stripe</text></svg>
+                    <span>Sécurisé · Paiement chiffré</span>
+                </div>
+                <p class="switch-text" style="margin-top:16px;">
+                    <a href="#" class="switch-link switch-link--subtle" id="backToVerifyFromPayment">← Retour</a>
+                </p>
+            </div>
+            <div class="form-state" id="stateSuccess" style="display:none;">
+                <div class="success-icon">
+                    <svg viewBox="0 0 80 80" fill="none">
+                        <circle cx="40" cy="40" r="38" stroke="#22c55e" stroke-width="3" fill="#f0fdf4"/>
+                        <path d="M28 40l8 8 16-16" stroke="#22c55e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1 class="form-title">Bienvenue à bord !</h1>
+                <p class="form-subtitle">Votre compte a été créé avec succès.</p>
+                <button class="btn-primary" id="goToDashboard">
+                    <span class="btn-text">Accéder au tableau de bord</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
