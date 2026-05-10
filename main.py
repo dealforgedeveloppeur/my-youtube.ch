@@ -3,7 +3,7 @@ from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from urllib.parse import unquote
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -175,23 +175,21 @@ def create_token(data: dict):
 
 async def check_token(request: Request):
     cookie_header = request.headers.get("cookie")
-    print(f"DEBUG - Header Cookie brut : {cookie_header}")
     session_token = None
     if cookie_header:
         match = re.search(r'(?:^|;\s*)session_token=([^;]*)', cookie_header)
         if match:
             session_token = match.group(1)
-    print(f"DEBUG - Token extrait manuellement : {session_token}")
     if not session_token:
-        raise HTTPException(status_code=401, detail="Non connecté.")
+        return RedirectResponse(url="/Login", status_code=301)
     try:
         payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
         username: str = payload.get("sub")
         if username is None:
-            raise HTTPException(status_code=401, detail="Session invalide.")
+            return RedirectResponse(url="/Login", status_code=301)
         return username
     except JWTError:
-        raise HTTPException(status_code=401, detail="Session expirée.")
+        return RedirectResponse(url="/Login", status_code=301)
 
 
 @app.post("/CreateUser")
@@ -204,7 +202,7 @@ def create_new_user(content: dict, response: Response):
         json.dump(datas, f, indent=2, ensure_ascii=False)
     token = create_token(data={"sub": email})
     response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
-    return {"message": "Utilisateur créé avec succès."}
+    return RedirectResponse(url="/", status_code=301)
 
 
 @app.post("/Login")
@@ -214,7 +212,7 @@ def login(content: dict, response: Response):
         if pwd_context.verify(no_rainbow_tables + content.get("password"), json.load(f)["password"]):
             token = create_token(data={"sub": email})
             response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
-            return {"message": "Connexion réussie"}
+            return RedirectResponse(url="/", status_code=301)
     raise HTTPException(status_code=401, detail="Identifiants incorrects.")
 
 
@@ -222,17 +220,6 @@ def login(content: dict, response: Response):
 def logout(response: Response):
     response.delete_cookie("session_token")
     return {"message": "Déconnecté."}
-
-
-@app.get("/GetWebsubInfos")
-def CheckYoutubeWebsub(request: Request):
-    if request.query_params.get("hub.mode") == "subscribe":
-        challenge = request.query_params.get("hub.challenge")
-        if not challenge:
-            return Response("Missing challenge")
-        return Response(challenge)
-    else:
-        print(request)
 
 
 @app.post("/Youtube")
@@ -280,11 +267,23 @@ def send_youtubeurs(username: str = Depends(check_token)):
 
 
 @app.get("/", response_class=HTMLResponse)
-def BaseFile():
-    username = Depends(check_token)
-    if username:
-        with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
-            return BaseFile.read()
+def BaseFile(username: str = Depends(check_token)):
+    with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
+        return BaseFile.read()
+
+
+@app.get("/Login", response_class=HTMLResponse)
+def LoginPage():
+    with open("Web/Compilated/login.html", "r", encoding="utf-8") as BaseFile:
+        return BaseFile.read()
+
+
+@app.get("/GetWebsubInfos")
+def CheckYoutubeWebsub(request: Request):
+    if request.query_params.get("hub.mode") == "subscribe":
+        challenge = request.query_params.get("hub.challenge")
+        if not challenge:
+            return Response("Missing challenge")
+        return Response(challenge)
     else:
-        with open("Web/Compilated/login.html", "r", encoding="utf-8") as BaseFile:
-            return BaseFile.read()
+        print(request)
