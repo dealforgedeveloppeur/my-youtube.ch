@@ -20,7 +20,7 @@ def CompileWebFiles():
             CSS = re.sub(r'\s+', ' ', CSS)
         with open(f"Web/Js/{file.replace(".html", ".js")}", "r", encoding="utf-8") as f:
             JS = f.read()
-            JS = re.sub(r'\s+', '', JS)
+            JS = re.sub(r'\s+', ' ', JS)
         with open(f"Web/Compilated/{file}", "w", encoding="utf-8") as f:
             f.write(HTML.replace("***style***", CSS).replace("***script***", JS))
 
@@ -164,8 +164,6 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup_event():
     CompileWebFiles()
-    while True:
-        """"""
 
 
 def create_token(data: dict):

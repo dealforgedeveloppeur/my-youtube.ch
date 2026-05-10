@@ -93,7 +93,7 @@ function renderNextVideos(isInitial = false) {
 }
 
 function communication(dict, where) {
-    fetch('https://app.astrovoice.ch/${where}', {
+    return fetch(`https://app.astrovoice.ch/${where}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dict)
@@ -121,7 +121,7 @@ async function sendSearch() {
         }
     };
     try {
-        const response = await communication(payload, 'Youtube')
+        const response = await communication(payload, 'Youtube');
         await new Promise(resolve => setTimeout(resolve, 300));
         if (response.ok) {
             const results = await response.json();
