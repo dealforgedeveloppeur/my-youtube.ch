@@ -163,5 +163,9 @@ function toggleDropdown(event) {
 document.getElementById('dropdownContent').addEventListener('click', e => e.stopPropagation());
 document.addEventListener('click', () => document.getElementById('dropdown').classList.remove('open'));
 
-sendSearch();
-chargerYoutubeurs();
+async function initApp() {
+    await sendSearch();
+    await chargerYoutubeurs();
+}
+
+initApp();

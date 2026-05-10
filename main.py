@@ -136,11 +136,10 @@ def SubscribeToChannel(channel_id: str):
     data = {
         "hub.mode": "subscribe",
         "hub.topic": f"https://www.youtube.com/xml/feeds/videos.xml?channel_id={channel_id}",
-        "hub.callback": f"https://deborah-clouds-finger-bubble.trycloudflare.com/GetWebsubInfos",
+        "hub.callback": f"https://app.astrovoice.ch/my-youtube/GetWebsubInfos",
         "hub.verify": "async",
     }
     response = requests.post("https://pubsubhubbub.appspot.com/subscribe", data=data)
-    print(response, "ok")
     if response.status_code not in [202, 204]:
         raise Exception(f"Erreur abonnement WebSub: {response.status_code} - {response.text}")
     return True
@@ -204,7 +203,7 @@ def create_new_user(content: dict, response: Response):
         datas = {"password": pwd_context.hash(no_rainbow_tables + content.get("password")), "youtubeurs": ["@Aywen", "@VUFranceTV"]}
         json.dump(datas, f, indent=2, ensure_ascii=False)
     token = create_token(data={"sub": email})
-    response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=True, path="/")
+    response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
     return {"message": "Utilisateur créé avec succès."}
 
 
@@ -214,7 +213,7 @@ def login(content: dict, response: Response):
     with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
         if pwd_context.verify(no_rainbow_tables + content.get("password"), json.load(f)["password"]):
             token = create_token(data={"sub": email})
-            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=True, path="/")
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
             return {"message": "Connexion réussie"}
     raise HTTPException(status_code=401, detail="Identifiants incorrects.")
 
