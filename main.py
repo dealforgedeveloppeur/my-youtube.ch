@@ -8,6 +8,7 @@ from urllib.parse import unquote
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from typing import Optional
+from fastapi.middleware.cors import CORSMiddleware
 
 
 def CompileWebFiles():
@@ -159,6 +160,7 @@ no_rainbow_tables = os.getenv("PEPPER")
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 api_keys_number = ListAPIKeysNumber()
 app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["https://app.astrovoice.ch"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
 @app.on_event("startup")
@@ -266,11 +268,11 @@ def search_youtube(content: dict, username: str = Depends(check_token)):
 @app.post("/GetYoutubeurs")
 def send_youtubeurs(username: str = Depends(check_token)):
     with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
-        youtubeurs = json.loads(f)["youtubeurs"]
+        youtubeurs = json.load(f)["youtubeurs"]
         return youtubeurs
 
 
 @app.get("/", response_class=HTMLResponse)
-def BaseFile(username: str = Depends(check_token)):
+def BaseFile():#username: str = Depends(check_token)):
     with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
-        return BaseFile.read().replace()
+        return BaseFile.read()
