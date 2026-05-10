@@ -1,9 +1,6 @@
-const todayStr = new Date().toISOString().split('T')[0];
-['date_1', 'date_21', 'date_22'].forEach(id => { const el = document.getElementById(id); if(el) { el.value = todayStr; el.max = todayStr; }});
-let allData = [];
-let currentIndex = 0;
-const CHUNK_SIZE = 4 * 8;
-let isNextBatchLoading = false;
+const todayStr = new Date().toISOString().split('T')[0], CHUNK_SIZE = 4 * 8;
+['date_1', 'date_21', 'date_22'].forEach(id => { const el = document.getElementById(id); if(el) { el.value = todayStr; el.max = todayStr;}});
+let allData = [], currentIndex = 0, isNextBatchLoading = false;
 
 function updateResultsCount(count) {
     let header = document.getElementById('results-header');
@@ -24,12 +21,10 @@ function updateScroller(data) {
     scroller.innerHTML = '';
     updateResultsCount(allData.length);
     renderNextVideos(true);
-
     const sentinel = document.createElement('div');
     sentinel.id = 'sentinel';
     sentinel.style.height = '10px';
     scroller.appendChild(sentinel);
-
     const observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && !isNextBatchLoading && currentIndex < allData.length) {
             renderNextVideos(false);
@@ -42,40 +37,32 @@ function updateScroller(data) {
 }
 
 function executeInjection() {
-    const template = document.getElementById('card-template');
-    const scroller = document.getElementById('video-scroller');
-    const sentinel = document.getElementById('sentinel');
-    const mainFragment = document.createDocumentFragment();
-    const nextBatch = allData.slice(currentIndex, currentIndex + CHUNK_SIZE);
+    const template = document.getElementById('card-template'), scroller = document.getElementById('video-scroller'), sentinel = document.getElementById('sentinel'), mainFragment = document.createDocumentFragment(), nextBatch = allData.slice(currentIndex, currentIndex + CHUNK_SIZE);
     for (let i = 0; i < nextBatch.length; i += 4) {
         const wrapper = document.createElement('div');
         wrapper.className = 'wrapper';
         const chunk = nextBatch.slice(i, i + 4);
         chunk.forEach(video => {
-            const clone = template.content.cloneNode(true);
-            const thumbnail = clone.querySelector('.thumbnail');
-            const laterIcon = clone.querySelector('.later-icon');
-            const downloadIcon = clone.querySelector('.download-icon');
+            const clone = template.content.cloneNode(true), thumbnail = clone.querySelector('.thumbnail'), laterIcon = clone.querySelector('.later-icon'), downloadIcon = clone.querySelector('.download-icon');
             laterIcon.onclick = (e) => {
                 e.stopPropagation();
-                addToWatchLater(video.id, video.duration, video.title);
+                communication({url: video.id, title: video.title, time: video.duration}, 'WatchLater');
             };
             if (video.download === true) {
                 downloadIcon.onclick = (e) => {
                     e.stopPropagation();
-                    deleteVideoFile(video.id);
+                    communication({url: video.id}, 'DeleteVideoFile');
                 };
             } else {
                 downloadIcon.onclick = (e) => {
                     e.stopPropagation();
-                    downloadVideo(video.id, video.duration, video.title);
+                    communication({url: video.id, title: video.title, duration: video.duration}, 'DownloadVideo');
                 };
             }
             thumbnail.src = `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
             thumbnail.loading = "lazy";
             thumbnail.onclick = () => {
-                console.log(video);
-                watchVideo(video.id, video.title, video.download);
+                communication({url: video.id, title: video.title, download: video.download}, 'Open');
             };
             clone.querySelector('.text').textContent = video.title;
             clone.querySelector('.duration').textContent = video.duration;
@@ -105,43 +92,11 @@ function renderNextVideos(isInitial = false) {
     }
 }
 
-function addToWatchLater(id, time, title) {
-    fetch('http://localhost:15000/WatchLater', {
+function communication(dict, where) {
+    fetch('https://app.astrovoice.ch/${where}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({url: id, title: title, time: time})
-    });
-}
-
-function deleteVideoFile(id) {
-    fetch('http://localhost:15000/DeleteVideoFile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({url: id})
-    });
-}
-
-function downloadVideo(id, time, title) {
-    fetch('http://localhost:15000/DownloadVideo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({url: id, title: title, duration: time})
-    });
-}
-
-function watchVideo(id, title, download) {
-    fetch('http://localhost:15000/Open', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({url: id, title: title, download: download})
-    });
-}
-
-function searchOnYoutube(query) {
-    fetch('http://localhost:15000/Search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({query: query})
+        body: JSON.stringify(dict)
     });
 }
 
@@ -166,11 +121,7 @@ async function sendSearch() {
         }
     };
     try {
-        const response = await fetch('http://localhost:15000/Youtube', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+        const response = await communication(payload, 'Youtube')
         await new Promise(resolve => setTimeout(resolve, 300));
         if (response.ok) {
             const results = await response.json();
@@ -185,12 +136,7 @@ async function sendSearch() {
 }
 
 function toggleSearchBar() {
-    const mode = document.getElementById('liste_deroulante').value;
-    const container = document.getElementById('date_inputs');
-    const d1 = document.getElementById('date_1');
-    const d21 = document.getElementById('date_21');
-    const d22 = document.getElementById('date_22');
-
+    const mode = document.getElementById('liste_deroulante').value, container = document.getElementById('date_inputs'), d1 = document.getElementById('date_1'), d21 = document.getElementById('date_21'), d22 = document.getElementById('date_22');
     container.style.display = (mode === 'single' || mode === 'range') ? 'inline-flex' : 'none';
     d1.style.display = (mode === 'single') ? 'block' : 'none';
     d21.style.display = (mode === 'range') ? 'block' : 'none';

@@ -1,21 +1,26 @@
 import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, urllib.request, re, random, subprocess
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from urllib.parse import unquote
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from typing import Optional
 
 
 def CompileWebFiles():
     for file in os.listdir("Web/Html"):
         with open(f"Web/Html/{file}", "r", encoding="utf-8") as f:
             HTML = f.read()
+            HTML = re.sub(r'>\s+<', '><', HTML)
         with open(f"Web/Css/{file.replace(".html", ".css")}", "r", encoding="utf-8") as f:
             CSS = f.read()
+            CSS = re.sub(r'\s+', ' ', CSS)
         with open(f"Web/Js/{file.replace(".html", ".js")}", "r", encoding="utf-8") as f:
             JS = f.read()
+            JS = re.sub(r'\s+', '', JS)
         with open(f"Web/Compilated/{file}", "w", encoding="utf-8") as f:
             f.write(HTML.replace("***style***", CSS).replace("***script***", JS))
 
@@ -147,16 +152,69 @@ def AddNewYoutubeur(name):
         print(SubscribeToChannel(UCID))
 
 
-CompileWebFiles()
+algorithm = "HS256"
+access_token_expire_days = 31
+secret_key = os.getenv("SECRET_KEY")
+no_rainbow_tables = os.getenv("PEPPER")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 api_keys_number = ListAPIKeysNumber()
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:16000"], allow_methods=["*"], allow_credentials=True, allow_headers=["*"], )
-app.mount("/Web/Images", StaticFiles(directory="Web/Images"), name="Images")
 
 
 @app.on_event("startup")
 async def startup_event():
-    SubscribeToChannel("UCMyOj6fhvKFMjxUCp3b_3gA")
+    CompileWebFiles()
+    while True:
+        """"""
+
+
+def create_token(data: dict):
+    to_encode = data.copy()
+    to_encode.update({"exp": datetime.utcnow() + timedelta(days=access_token_expire_days)})
+    return jwt.encode(to_encode, secret_key, algorithm=algorithm)
+
+
+async def check_token(session_token: Optional[str] = Cookie(None)):
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Non connecté.")
+    try:
+        payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Session invalide.")
+        return username
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Session expirée.")
+
+
+@app.post("/CreateUser")
+def create_new_user(content: dict):
+    email = content.get("email")
+    if os.path.exists(f"Users/{email}.json"):
+        return {"message": "Utilisateur existant."}
+    with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
+        datas = {"password": pwd_context.hash(no_rainbow_tables + content.get("password"))}
+        f.write(json.loads(datas))
+    token = create_token(data={"sub": email})
+    response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=False)
+    return {"message": "Utilisateur créé avec succès."}
+
+
+@app.post("/Login")
+def login(content: dict, response: Response):
+    email = content.get("email")
+    with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
+        if pwd_context.verify(no_rainbow_tables + content.get("password"), json.load(f)["password"]):
+            token = create_token(data={"sub": email})
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="Lax", secure=False)
+            return {"message": "Connexion réussie"}
+    raise HTTPException(status_code=401, detail="Identifiants incorrects.")
+
+
+@app.post("/Logout")
+def logout(response: Response):
+    response.delete_cookie("session_token")
+    return {"message": "Déconnecté."}
 
 
 @app.get("/GetWebsubInfos")
@@ -170,7 +228,44 @@ def CheckYoutubeWebsub(request: Request):
         print(request)
 
 
+@app.post("/Youtube")
+def search_youtube(content: dict, username: str = Depends(check_token)):
+    filter, title, duration = content.get("filter"), content.get("title"), content.get("duration")
+    max_length, min_length = duration.get("max"), duration.get("min")
+    youtubeurs, dates = content.get("creators"), content.get("dates")
+    single_date, range_start_date, range_end_date = dates.get("single"), dates.get("start"), dates.get("end")
+    list_of_filters = {
+        "today": (datetime.datetime.now, datetime.datetime.now),
+        "yesterday": (lambda: datetime.datetime.now() - datetime.timedelta(days=1), lambda: datetime.datetime.now() - datetime.timedelta(days=1)),
+        "week": (datetime.datetime.now, lambda: datetime.datetime.now() - datetime.timedelta(weeks=1)),
+        "month": (datetime.datetime.now, lambda: datetime.datetime.now() - datetime.timedelta(days=30)),
+        "year": (datetime.datetime.now, lambda: datetime.datetime.now() - datetime.timedelta(days=365)),
+        "all": (datetime.datetime.now, "2005-01-01"),
+        "single" : (single_date, single_date),
+        "range": (range_start_date, range_end_date)
+    }
+    try:
+        end_date, start_date = list_of_filters[filter]
+    except:
+        if filter == "watchlater":
+            with open("watch_later.json", "r", encoding="utf-8") as f:
+                videos = json.load(f)
+                values = list(videos.values())
+                values = [{**value, "download": False} for value in values]
+            return values
+        else:
+            with open("download_videos.json", "r", encoding="utf-8") as f:
+                videos = json.load(f)
+                values = list(videos.values())
+                values = [{**value, "download": True} for value in values]
+            return values
+    start_date = youtube.DateSlicer(start_date()) if callable(start_date) else start_date
+    end_date = youtube.DateSlicer(end_date()) if callable(end_date) else end_date
+    videos = youtube.GetVideos(names=youtubeurs, start_date=start_date, end_date=end_date, min_length=min_length, max_length=max_length, title=title)
+    return videos
+
+
 @app.get("/", response_class=HTMLResponse)
-def BaseFile():
+def BaseFile(username: str = Depends(check_token)):
     with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
         return BaseFile.read()
