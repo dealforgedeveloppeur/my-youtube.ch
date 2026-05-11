@@ -202,7 +202,7 @@ no_rainbow_tables = os.getenv("PEPPER")
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 api_keys_number = ListAPIKeysNumber()
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["https://app.astrovoice.ch"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+#app.add_middleware(CORSMiddleware, allow_origins=["https://app.astrovoice.ch"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
 # @app.on_event("startup")
