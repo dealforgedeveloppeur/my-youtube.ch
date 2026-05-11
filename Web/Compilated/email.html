@@ -4,7 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code de vérification</title>
-    <style>***style***</style>
+    <style>* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f4f7fc;
+    line-height: 1.5;
+    padding: 20px;
+}
+
+.email-container {
+    max-width: 550px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.email-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.email-header {
+    background: linear-gradient(135deg, #1e2b3c, #0f1a24);
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.email-header h1 {
+    color: white;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin: 0;
+}
+
+.email-body {
+    padding: 36px 28px 40px;
+    color: #1e2a3a;
+}
+
+.email-body p {
+    margin-bottom: 18px;
+    font-size: 1rem;
+}
+
+.code-block {
+    background-color: #f0f4f9;
+    border-left: 6px solid #2c7da0;
+    font-family: 'Courier New', 'SF Mono', monospace;
+    font-size: 2.2rem;
+    font-weight: bold;
+    letter-spacing: 8px;
+    text-align: center;
+    padding: 20px 12px;
+    margin: 28px 0;
+    border-radius: 16px;
+    color: #0a2c3d;
+    word-break: break-all;
+    background: #eef2f7;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.05);
+}
+
+hr {
+    margin: 28px 0 16px;
+    border: none;
+    border-top: 1px solid #e2e8f0;
+}
+
+.small {
+    font-size: 0.8rem;
+    color: #5b6e8c;
+    text-align: center;
+}
+
+.small a {
+    color: #2c7da0;
+    text-decoration: none;
+}
+
+.small a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 550px) {
+    .email-container {
+        margin: 20px auto;
+        border-radius: 20px;
+    }
+    .email-body {
+        padding: 24px 20px;
+    }
+    .code-block {
+        font-size: 1.6rem;
+        letter-spacing: 4px;
+        padding: 14px 8px;
+    }
+    .email-header h1 {
+        font-size: 1.3rem;
+    }
+}</style>
 </head>
 <body>
     <div class="email-container">

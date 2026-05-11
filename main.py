@@ -220,7 +220,7 @@ def SendEmail(content: dict, response: Response):
     with open("Web/Compilated/email.html", "r", encoding="utf-8") as f:
         msg = EmailMessage()
         msg["Subject"], msg["From"], msg["To"] = "Votre code de connexion à my-youtube.", sender_email, email
-        msg.set_content(f.read().replace("***CODE***", number))
+        msg.set_content(f.read().replace("***CODE***", str(number)), subtype="html")
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
             smtp.login(sender_email, sender_password)
