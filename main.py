@@ -1,4 +1,4 @@
-import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, urllib.request, re, random, subprocess, smtplib
+import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, bisect, urllib.request, re, random, subprocess, smtplib
 from email.message import EmailMessage
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
@@ -153,6 +153,43 @@ def AddNewYoutubeur(name):
         print(SubscribeToChannel(UCID))
 
 
+def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.datetime.now, min_length: str, max_length: str, title_words: list):
+    with open(f"Youtubeurs/{name}.json", "r", encoding="utf-8") as f:
+        all_videos = json.load(f)
+        start = bisect.bisect_left(all_videos["dates"], start_date)
+        end = bisect.bisect_right(all_videos["dates"], end_date)
+        result = list(chain.from_iterable(all_videos["ids"][start:end]))
+        videos = []
+        for video in result:
+            if not min_length or TimeToNumber(min_length) <= TimeToNumber(all_videos["videos"][video][1]) <= TimeToNumber(max_length):
+                if not title_words:
+                    videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False})
+                for word in title_words:
+                    if len(all_videos["videos"][video][0].lower().split(word)) > 1:
+                        videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False})
+                        break
+    return videos
+
+
+def GetVideos(username, names: list, start_date: datetime.datetime.now, end_date: datetime.datetime.now = None, min_length: str = None, max_length: str = None, title: str = None):
+    bans_words = []
+    videos = []
+    if not names or names == []:
+        with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
+            names = json.load(f)["youtubeurs"]
+    if not end_date or end_date == "":
+        end_date = start_date
+    if min_length and (not max_length or max_length == ""):
+        max_length = min_length
+    elif (not min_length and not max_length) or (min_length == "" and max_length == ""):
+        min_length, max_length = "00:01", "9:59:59"
+    if title == "":
+        title = None
+    for name in names:
+        videos.extend(GetVideoFor(name, start_date, end_date, min_length, max_length, [word.lower() for word in title.split() if word.lower() not in bans_words] if title else []))
+    return videos
+
+
 email_keys = {}
 algorithm = "HS256"
 access_token_expire_days = 31
@@ -202,7 +239,7 @@ def CheckEmail(content: dict, response: Response):
     email, code, password, username = content.get("email"), content.get("code"), content.get("password"), content.get("username")
     if int(code) == email_keys[email]:
         with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
-            datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": []}
+            datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": [], "watch_later": [], "downloaded": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
             token = create_token(data={"sub": email})
             response = JSONResponse(content={"message": "Connexion réussie", "redirect": "/"}, status_code=200)
@@ -271,20 +308,18 @@ def SearchYoutube(content: dict, username: str = Depends(check_token)):
         end_date, start_date = list_of_filters[filter]
     except:
         if filter == "watchlater":
-            with open("watch_later.json", "r", encoding="utf-8") as f:
-                videos = json.load(f)
-                values = list(videos.values())
+            with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
+                videos = json.load(f)["watch_later"]
                 values = [{**value, "download": False} for value in values]
             return values
         else:
-            with open("download_videos.json", "r", encoding="utf-8") as f:
-                videos = json.load(f)
-                values = list(videos.values())
+            with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
+                videos = json.load(f)["downloaded"]
                 values = [{**value, "download": True} for value in values]
             return values
-    start_date = youtube.DateSlicer(start_date()) if callable(start_date) else start_date
-    end_date = youtube.DateSlicer(end_date()) if callable(end_date) else end_date
-    videos = youtube.GetVideos(names=youtubeurs, start_date=start_date, end_date=end_date, min_length=min_length, max_length=max_length, title=title)
+    start_date = DateSlicer(start_date()) if callable(start_date) else start_date
+    end_date = DateSlicer(end_date()) if callable(end_date) else end_date
+    videos = GetVideos(username=username, names=youtubeurs, start_date=start_date, end_date=end_date, min_length=min_length, max_length=max_length, title=title)
     return videos
 
 
