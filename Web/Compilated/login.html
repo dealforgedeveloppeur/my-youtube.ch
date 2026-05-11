@@ -324,6 +324,16 @@
             btn.disabled = true;
             btn.textContent = 'Connexion...';
             const res = await apiCall('Login', { email, password });
+            btn.disabled = false;
+            btn.textContent = 'Se connecter';
+
+            if (res.success) {
+                showToast('Connecté ! Redirection...');
+                // Simuler redirection (vous pouvez changer la cible)
+                setTimeout(() => { window.location.href = '/'; }, 500);
+            } else {
+                showToast(res.error || 'Échec de la connexion');
+            }
         });
 
         // ------ ACTION: INSCRIPTION (envoi code) ------
