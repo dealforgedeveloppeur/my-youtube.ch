@@ -202,7 +202,7 @@ def check_email(content: dict, response: Response):
             datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
             token = create_token(data={"sub": email})
-            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="")
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="https://app.astrovoice.ch/my-youtube")
             return RedirectResponse(url="", status_code=301)
 
 
