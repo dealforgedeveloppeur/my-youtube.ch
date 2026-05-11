@@ -152,6 +152,7 @@ def AddNewYoutubeur(name):
         print(SubscribeToChannel(UCID))
 
 
+email_keys = {}
 algorithm = "HS256"
 access_token_expire_days = 31
 secret_key = os.getenv("SECRET_KEY")
@@ -162,9 +163,9 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["https://app.astrovoice.ch"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
-@app.on_event("startup")
-async def startup_event():
-    CompileWebFiles()
+# @app.on_event("startup")
+# async def startup_event():
+#    CompileWebFiles()
 
 
 def create_token(data: dict):
@@ -192,17 +193,25 @@ async def check_token(request: Request):
         raise HTTPException(status_code=301, headers={"Location": "Login"})
 
 
-@app.post("/CreateUser")
-def create_new_user(content: dict, response: Response):
-    email = content.get("email")
-    if os.path.exists(f"Users/{email}.json"):
-        return {"message": "Utilisateur existant."}
-    with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
-        datas = {"password": pwd_context.hash(no_rainbow_tables + content.get("password")), "youtubeurs": ["@Aywen", "@VUFranceTV"]}
-        json.dump(datas, f, indent=2, ensure_ascii=False)
-    token = create_token(data={"sub": email})
-    response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
-    return RedirectResponse(url="/", status_code=301)
+@app.post("/CheckEmail")
+def check_email(content: dict, response: Response):
+    global email_keys
+    email, code, password, username = content.get("email"), content.get("code"), content.get("password"), content.get("username")
+    if int(code) == email_keys[email]:
+        with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
+            datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": []}
+            json.dump(datas, f, indent=2, ensure_ascii=False)
+            token = create_token(data={"sub": email})
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
+            return RedirectResponse(url="/", status_code=301)
+
+
+@app.post("/SendEmail")
+def SendEmail(content: dict, response: Response):
+    global email_keys
+    number = random.randint(100000, 999999)
+    email_keys[content.get("email")] = number
+    print(number)
 
 
 @app.post("/Login")
