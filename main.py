@@ -205,9 +205,8 @@ def CheckEmail(content: dict, response: Response):
             datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
             token = create_token(data={"sub": email})
-            redirect_response = RedirectResponse(url="/", status_code=302)
-            redirect_response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
-            return redirect_response
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
+            raise HTTPException(status_code=301, headers={"Location": ""})
 
 
 @app.post("/SendEmail")
