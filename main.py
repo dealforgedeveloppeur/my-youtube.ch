@@ -217,12 +217,7 @@ def create_token(data: dict):
 
 
 async def check_token(request: Request):
-    cookie_header = request.headers.get("cookie")
-    session_token = None
-    if cookie_header:
-        match = re.search(r'(?:^|;\s*)session_token=([^;]*)', cookie_header)
-        if match:
-            session_token = match.group(1)
+    session_token = request.cookies.get("session_token")
     if not session_token:
         raise HTTPException(status_code=301, headers={"Location": "Login"})
     try:
