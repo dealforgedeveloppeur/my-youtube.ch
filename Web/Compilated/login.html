@@ -296,7 +296,7 @@
         });
 
         document.getElementById('resend-code').addEventListener('click', async () => {
-            await apiCall('/SendEmail', {
+            await apiCall('SendEmail', {
                 email: document.getElementById('login-email').value.trim(),
             });
             showToast('Nouveau code envoyé');
@@ -323,7 +323,7 @@
             const btn = document.getElementById('login-btn');
             btn.disabled = true;
             btn.textContent = 'Connexion...';
-            const res = await apiCall('/Login', { email, password });
+            const res = await apiCall('Login', { email, password });
         });
 
         // ------ ACTION: INSCRIPTION (envoi code) ------
@@ -353,7 +353,7 @@
             const btn = document.getElementById('register-btn');
             btn.disabled = true;
             btn.textContent = 'Envoi du code...';
-            const res = await apiCall('/SendEmail', {email: email});
+            const res = await apiCall('SendEmail', {email: email});
             btn.disabled = false;
             btn.textContent = 'Envoyer le code';
 
@@ -382,7 +382,7 @@
             const username = document.getElementById('reg-username').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
-            const res = await apiCall('/CheckEmail', { email: email, username: username, password: password, code: code });
+            const res = await apiCall('CheckEmail', { email: email, username: username, password: password, code: code });
             btn.disabled = false;
             btn.textContent = 'Vérifier le code';
 
@@ -441,7 +441,7 @@
             }
 
             // Envoi au backend
-            const res = await apiCall('/ProcessPayment', {
+            const res = await apiCall('ProcessPayment', {
                 email: currentEmail,
                 username: currentUsername,
                 paymentMethodId: paymentMethod.id,
