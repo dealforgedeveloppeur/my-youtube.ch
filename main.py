@@ -10,6 +10,8 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
+from itertools import chain
+from functools import partial
 
 
 def CompileWebFiles():
@@ -243,7 +245,7 @@ def CheckEmail(content: dict, response: Response):
             json.dump(datas, f, indent=2, ensure_ascii=False)
             token = create_token(data={"sub": email})
             response = JSONResponse(content={"message": "Connexion réussie", "redirect": "/"}, status_code=200)
-            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, secure=True, path="/")
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, secure=True, samesite='strict', domain="app.astrovoice.ch", path="/")
             return response
 
 
@@ -275,7 +277,7 @@ def Login(content: dict):
             if pwd_context.verify(no_rainbow_tables + content.get("password"), user_data["password"]):
                 token = create_token(data={"sub": email})
                 response = JSONResponse(content={"message": "Connexion réussie", "redirect": "/"}, status_code=200)
-                response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, secure=True, path="/")
+                response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, secure=True, samesite='strict', domain="app.astrovoice.ch", path="/")
                 return response
     except FileNotFoundError:
         pass
