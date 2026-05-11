@@ -397,6 +397,7 @@
             btn.textContent = 'Vérifier le code';
 
             if (res.success) {
+                setTimeout(() => { window.location.href = '/'; }, 500);
                 // Montage Stripe lors du passage au paiement
                 if (!cardElement) {
                     cardElement = elements.create('card', {

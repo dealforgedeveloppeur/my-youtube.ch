@@ -2,7 +2,7 @@ import datetime, requests, os, threading, time, socketserver, webbrowser, json, 
 from email.message import EmailMessage
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, RedirectResponse
 from urllib.parse import unquote
@@ -205,9 +205,9 @@ def CheckEmail(content: dict, response: Response):
             datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
             token = create_token(data={"sub": email})
-            redirect_response = RedirectResponse(url="/", status_code=302)
-            redirect_response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
-            return redirect_response
+            response = JSONResponse(content={"message": "Connexion réussie", "redirect": "/"}, status_code=200)
+            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, secure=True, path="/")
+            return response
 
 
 @app.post("/SendEmail")
@@ -246,13 +246,13 @@ def Login(content: dict):
 
 
 @app.post("/Logout")
-def logout(response: Response):
+def Logout(response: Response):
     response.delete_cookie("session_token")
     return {"message": "Déconnecté."}
 
 
 @app.post("/Youtube")
-def search_youtube(content: dict, username: str = Depends(check_token)):
+def SearchYoutube(content: dict, username: str = Depends(check_token)):
     filter, title, duration = content.get("filter"), content.get("title"), content.get("duration")
     max_length, min_length = duration.get("max"), duration.get("min")
     youtubeurs, dates = content.get("creators"), content.get("dates")
@@ -289,7 +289,7 @@ def search_youtube(content: dict, username: str = Depends(check_token)):
 
 
 @app.post("/GetYoutubeurs")
-def send_youtubeurs(username: str = Depends(check_token)):
+def SendYoutubeurs(username: str = Depends(check_token)):
     with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
         youtubeurs = json.load(f)["youtubeurs"]
         return youtubeurs
