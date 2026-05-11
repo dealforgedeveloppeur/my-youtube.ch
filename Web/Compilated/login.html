@@ -330,7 +330,7 @@
             if (res.success) {
                 showToast('Connecté ! Redirection...');
                 // Simuler redirection (vous pouvez changer la cible)
-                setTimeout(() => { window.location.href = '/'; }, 500);
+                window.location.href = '/my-youtube';
             } else {
                 showToast(res.error || 'Échec de la connexion');
             }
@@ -397,7 +397,7 @@
             btn.textContent = 'Vérifier le code';
 
             if (res.success) {
-                setTimeout(() => { window.location.href = '/'; }, 500);
+                window.location.href = '/my-youtube';
                 // Montage Stripe lors du passage au paiement
                 if (!cardElement) {
                     cardElement = elements.create('card', {
