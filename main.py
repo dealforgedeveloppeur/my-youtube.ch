@@ -1,4 +1,5 @@
-import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, urllib.request, re, random, subprocess
+import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, urllib.request, re, random, subprocess, smtplib
+from email.message import EmailMessage
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
 from fastapi.responses import HTMLResponse
@@ -155,6 +156,8 @@ def AddNewYoutubeur(name):
 email_keys = {}
 algorithm = "HS256"
 access_token_expire_days = 31
+sender_email = os.getenv("SENDER_EMAIL")
+sender_password = os.getenv("SENDER_PASSWORD")
 secret_key = os.getenv("SECRET_KEY")
 no_rainbow_tables = os.getenv("PEPPER")
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -194,7 +197,7 @@ async def check_token(request: Request):
 
 
 @app.post("/CheckEmail")
-def check_email(content: dict, response: Response):
+def CheckEmail(content: dict, response: Response):
     global email_keys
     email, code, password, username = content.get("email"), content.get("code"), content.get("password"), content.get("username")
     if int(code) == email_keys[email]:
@@ -202,26 +205,43 @@ def check_email(content: dict, response: Response):
             datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
             token = create_token(data={"sub": email})
-            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="https://app.astrovoice.ch/my-youtube")
-            return RedirectResponse(url="", status_code=301)
+            redirect_response = RedirectResponse(url="/", status_code=302)
+            redirect_response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
+            return redirect_response
 
 
 @app.post("/SendEmail")
 def SendEmail(content: dict, response: Response):
     global email_keys
+    email = content.get("email")
     number = random.randint(100000, 999999)
-    email_keys[content.get("email")] = number
+    email_keys[email] = number
     print(number)
+    with open("Web/Compilated/email.html", "r", encoding="utf-8") as f:
+        msg = EmailMessage()
+        msg["Subject"], msg["From"], msg["To"] = "Votre code de connexion à my-youtube.", sender_email, email
+        msg.set_content(f.read().replace("***CODE***", number))
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(sender_email, sender_password)
+            smtp.send_message(msg)
+    except Exception as e:
+        print(f"Une erreur est survenue lors de l'envoi : {e}")
 
 
 @app.post("/Login")
-def login(content: dict, response: Response):
+def Login(content: dict):
     email = content.get("email")
-    with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
-        if pwd_context.verify(no_rainbow_tables + content.get("password"), json.load(f)["password"]):
-            token = create_token(data={"sub": email})
-            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
-            return RedirectResponse(url="/", status_code=301)
+    try:
+        with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
+            user_data = json.load(f)
+            if pwd_context.verify(no_rainbow_tables + content.get("password"), user_data["password"]):
+                token = create_token(data={"sub": email})
+                redirect_response = RedirectResponse(url="/", status_code=302)
+                redirect_response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, samesite="none", secure=True, path="/")
+                return redirect_response
+    except FileNotFoundError:
+        pass
     raise HTTPException(status_code=401, detail="Identifiants incorrects.")
 
 
