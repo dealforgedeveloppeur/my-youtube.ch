@@ -286,6 +286,7 @@ async function apiCall(url, data, method = 'POST') {
     try {
         const response = await fetch(url, {
             method: method,
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
