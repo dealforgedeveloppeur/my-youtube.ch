@@ -282,7 +282,7 @@
             if (res.success && res.data && res.data.token) {
                 localStorage.setItem('auth_token', res.data.token);
                 showToast('Connecté ! Redirection...');
-                setTimeout(() => { window.location.href = '/dashboard'; }, 150);
+                setTimeout(() => { window.location.href = '/my-youtube/dashboard'; }, 150);
             } else {
                 showToast(res.error || 'Échec de la connexion');
             }
@@ -353,7 +353,7 @@
             if (res.success && res.data && res.data.token) {
                 localStorage.setItem('auth_token', res.data.token);
                 showToast('Compte validé et connecté !');
-                setTimeout(() => { window.location.href = '/dashboard'; }, 150);
+                setTimeout(() => { window.location.href = '/my-youtube/dashboard'; }, 150);
             } else {
                 setError('verify-code-error', res.error || 'Code incorrect');
                 resetCodeInputs();

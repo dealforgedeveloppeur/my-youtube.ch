@@ -336,13 +336,13 @@ def LoginPage():
 
 
 @app.get("/paiement", response_class=HTMLResponse)
-def Paiement(username: str = Depends(CheckConnection)):
+def Paiement():
     with open("Web/Compilated/paiement.html", "r", encoding="utf-8") as BaseFile:
         return BaseFile.read()
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def Dashboard(username: str = Depends(CheckConnection)):
+def Dashboard():
     with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
         return BaseFile.read()
 
