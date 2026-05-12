@@ -331,7 +331,7 @@ def SearchOnYoutube(content: dict, username: str = Depends(CheckConnection)):
     if len(query.split("watch?v=")) < 1:
         """"""
     else:
-        AddNewYoutubeur(query)
+        AddNewYoutubeur(username, query)
     
 
 @app.post("/GetYoutubeurs")
