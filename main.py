@@ -229,7 +229,7 @@ async def CheckConnection(request: Request, session_token=None):
     auth_header = str(request.headers.get("Authorization"))
     print(auth_header)
     session_token = auth_header[7:]
-    if not session_token:
+    if session_token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token d'authentification manquant.")
     try:
         payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
