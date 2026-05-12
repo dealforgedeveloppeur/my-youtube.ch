@@ -226,7 +226,7 @@ def CreateToken(data: dict):
 
 async def CheckConnection(request: Request, session_token=None):
     print(request.headers)
-    auth_header = request.headers.get("Authorization")
+    auth_header = str(request.headers.get("Authorization"))
     print(auth_header)
     session_token = auth_header[7:]
     if not session_token:
