@@ -226,7 +226,8 @@ def CreateToken(data: dict):
 
 async def CheckConnection(request: Request, session_token=None):
     print(request.headers)
-    auth_header = request.headers.get("authorization")
+    auth_header = request.headers.get("Authorization")
+    print(auth_header)
     session_token = auth_header[7:]
     if not session_token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token d'authentification manquant.")
