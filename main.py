@@ -90,11 +90,11 @@ def AddYoutubeurToJson(name):
         data = json.loads(f.read())
         youtubeurs = list(data.keys())
         if name in youtubeurs:
-            return "Already exists", None
+            return "Already exists", name
         else:
             UCID, true_name = SearchUCID(name)
         if true_name in youtubeurs:
-            return "Already exists", None
+            return "Already exists", true_name
         else:
             data[true_name] = UCID
     with NamedTemporaryFile("w", delete=False, dir="Youtubeurs", encoding="utf-8") as file:
