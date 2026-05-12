@@ -202,7 +202,7 @@ no_rainbow_tables = os.getenv("PEPPER")
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 api_keys_number = ListAPIKeysNumber()
 app = FastAPI()
-#app.add_middleware(CORSMiddleware, allow_origins=["https://app.astrovoice.ch"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+# app.add_middleware(CORSMiddleware, allow_origins=["https://app.astrovoice.ch"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
 # @app.on_event("startup")
@@ -216,8 +216,12 @@ def create_token(data: dict):
     return jwt.encode(to_encode, secret_key, algorithm=algorithm)
 
 
-async def check_token(request: Request):
-    session_token = request.cookies.get("session_token")
+async def check_token(request: Request, session_token=None):
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        session_token = auth_header.split(" ")[1]
+    if not session_token:
+        session_token = request.cookies.get("session_token")
     if not session_token:
         raise HTTPException(status_code=301, headers={"Location": "Login"})
     try:
@@ -239,9 +243,8 @@ def CheckEmail(content: dict, response: Response):
             datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": [], "watch_later": [], "downloaded": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
             token = create_token(data={"sub": email})
-            response = JSONResponse(content={"message": "Connexion réussie", "redirect": "/"}, status_code=200)
-            response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, secure=True, samesite='lax', path="/")
-            return response
+            response.set_cookie(key="session_token", value=token, httponly=True, secure=True, samesite="lax", path="/")
+            return {"success": True, "token": token}
 
 
 @app.post("/SendEmail")
@@ -271,9 +274,8 @@ def Login(content: dict):
             user_data = json.load(f)
             if pwd_context.verify(no_rainbow_tables + content.get("password"), user_data["password"]):
                 token = create_token(data={"sub": email})
-                response = JSONResponse(content={"message": "Connexion réussie", "redirect": "/"}, status_code=200)
-                response.set_cookie(key="session_token", value=token, httponly=True, max_age=60 * 60 * 24 * access_token_expire_days, secure=True, samesite='lax', path="/")
-                return response
+                response.set_cookie(key="session_token", value=token, httponly=True, secure=True, samesite="lax", path="/")
+                return {"success": True, "token": token}
     except FileNotFoundError:
         pass
     raise HTTPException(status_code=401, detail="Identifiants incorrects.")

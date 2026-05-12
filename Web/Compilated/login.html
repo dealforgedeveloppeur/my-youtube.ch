@@ -219,11 +219,14 @@
 
         // ------ APPELS API ------
         async function apiCall(url, data) {
+        const token = localStorage.getItem('auth_token');
+        const headers = {'Content-Type': 'application/json'};
+        if (token) { headers['Authorization'] = `Bearer ${token}`;}
             try {
                 const res = await fetch(url, {
                     method: 'POST',
                     credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: headers,
                     body: JSON.stringify(data)
                 });
                 const json = await res.json();
@@ -330,7 +333,9 @@
 
             if (res.success) {
                 showToast('Connecté ! Redirection...');
-                // Simuler redirection (vous pouvez changer la cible)
+                if (res.token) {
+                    localStorage.setItem('auth_token', res.token);
+                }
                 window.location.href = '/my-youtube';
             } else {
                 showToast(res.error || 'Échec de la connexion');
