@@ -225,19 +225,23 @@ def CreateToken(data: dict):
 
 
 async def CheckConnection(request: Request, session_token=None):
-    auth_header = str(request.headers.get("Authorization"))
-    session_token = auth_header[7:]
-    print(session_token)
-    payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
-    username: str = payload.get("sub")
-    print(username)
-    if username is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur invalide.")
-    if os.path.exists(f"Users/{username}.json"):
-        with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
-            if True:#json.load(f)["paiement"] < DateSlicer(datetime.datetime.now()):
-                raise HTTPException(status_code=401, detail="Paiement requis.")
-    return username
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        session_token = auth_header.split(" ")[1]
+    if not session_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token d'authentification manquant.")
+    try:
+        payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur invalide.")
+        if os.path.exists(f"Users/{username}.json"):
+            with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
+                if False:#json.load(f)["paiement"] < DateSlicer(datetime.datetime.now()):
+                    raise HTTPException(status_code=401, detail="Paiement requis.")
+        return username
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expirée ou invalide.")
 
 
 @app.post("/CheckEmail")
