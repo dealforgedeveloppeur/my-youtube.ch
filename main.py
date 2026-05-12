@@ -237,7 +237,7 @@ async def CheckConnection(request: Request, session_token=None):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur invalide.")
         if os.path.exists(f"Users/{username}.json"):
             with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
-                if json.load(f)["paiement"] < DateSlicer(datetime.datetime.now()):
+                if True:#json.load(f)["paiement"] < DateSlicer(datetime.datetime.now()):
                     raise HTTPException(status_code=401, detail="Paiement requis.")
         return username
     except JWTError:
