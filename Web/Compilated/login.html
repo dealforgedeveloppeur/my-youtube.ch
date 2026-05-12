@@ -332,10 +332,8 @@
             btn.textContent = 'Se connecter';
 
             if (res.success) {
-                showToast('Connecté ! Redirection...');
-                alert("Type de res : " + typeof res + "\nContenu de res.token : " + res.token);
-                if (res.token) {
-                    localStorage.setItem('auth_token', res.token);
+                if (res.data.token) {
+                    localStorage.setItem('auth_token', res.data.token);
                 }
             } else {
                 showToast(res.error || 'Échec de la connexion');
