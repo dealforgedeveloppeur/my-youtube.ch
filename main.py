@@ -343,7 +343,7 @@ def Paiement():
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def Dashboard():
-    with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
+    with open("Web/Compilated/dashboard.html", "r", encoding="utf-8") as BaseFile:
         return BaseFile.read()
 
 
