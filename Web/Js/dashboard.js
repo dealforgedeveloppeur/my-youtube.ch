@@ -107,6 +107,7 @@ async function chargerYoutubeurs() {
     const grid = document.querySelector('.grid-checkbox');
     grid.innerHTML = youtubeurs.map(y => `<label><input type="checkbox" name="creator" value="${y}"> ${y}</label>`).join('\n');
 }
+
 async function sendSearch() {
     const scroller = document.getElementById('video-scroller');
     const loader = document.getElementById('loading-container');
