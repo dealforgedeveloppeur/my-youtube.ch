@@ -315,6 +315,14 @@ def SearchYoutube(content: dict, username: str = Depends(CheckConnection)):
     videos = GetVideos(username=username, names=youtubeurs, start_date=start_date, end_date=end_date, min_length=min_length, max_length=max_length, title=title)
     return videos
 
+@app.post("/Search")
+def SearchOnYoutube(content: dict, username: str = Depends(CheckConnection)):
+    query = content.get("query")
+    if len(query.split("watch?v=")) < 1:
+        """"""
+    else:
+        AddNewYoutubeur(query)
+    
 
 @app.post("/GetYoutubeurs")
 def SendYoutubeurs(username: str = Depends(CheckConnection)):
