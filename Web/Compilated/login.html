@@ -336,7 +336,9 @@
                 if (res.token) {
                     localStorage.setItem('auth_token', res.token);
                 }
-                window.location.href = '/my-youtube';
+                setTimeout(() => {
+                    window.location.href = '/my-youtube';
+                }, 200);
             } else {
                 showToast(res.error || 'Échec de la connexion');
             }

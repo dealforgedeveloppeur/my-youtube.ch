@@ -267,7 +267,7 @@ def SendEmail(content: dict, response: Response):
 
 
 @app.post("/Login")
-def Login(content: dict):
+def Login(content: dict, response: Response):
     email = content.get("email")
     try:
         with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
