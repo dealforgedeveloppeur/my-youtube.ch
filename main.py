@@ -202,7 +202,6 @@ no_rainbow_tables = os.getenv("PEPPER")
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 api_keys_number = ListAPIKeysNumber()
 app = FastAPI()
-# app.add_middleware(CORSMiddleware, allow_origins=["https://app.astrovoice.ch"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
 # @app.on_event("startup")
@@ -210,28 +209,30 @@ app = FastAPI()
 #    CompileWebFiles()
 
 
-def create_token(data: dict):
+def CreateToken(data: dict):
     to_encode = data.copy()
     to_encode.update({"exp": datetime.datetime.utcnow() + datetime.timedelta(days=access_token_expire_days)})
     return jwt.encode(to_encode, secret_key, algorithm=algorithm)
 
 
-async def check_token(request: Request, session_token=None):
+async def CheckConnection(request: Request, session_token=None):
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         session_token = auth_header.split(" ")[1]
     if not session_token:
-        session_token = request.cookies.get("session_token")
-    if not session_token:
-        raise HTTPException(status_code=301, headers={"Location": "Login"})
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token d'authentification manquant.")
     try:
         payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
         username: str = payload.get("sub")
         if username is None:
-            raise HTTPException(status_code=301, headers={"Location": "Login"})
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur invalide.")
+        if os.path.exists(f"Users/{username}.json"):
+            with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
+                if json.load(f)["paiement"] < DateSlicer(datetime.datetime.now()):
+                    raise HTTPException(status_code=401, detail="Paiement requis.")
         return username
     except JWTError:
-        raise HTTPException(status_code=301, headers={"Location": "Login"})
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session expirée ou invalide.")
 
 
 @app.post("/CheckEmail")
@@ -242,18 +243,14 @@ def CheckEmail(content: dict, response: Response):
         with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
             datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": [], "watch_later": [], "downloaded": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
-            token = create_token(data={"sub": email})
-            response.set_cookie(key="session_token", value=token, httponly=True, secure=True, samesite="lax", path="/")
-            return {"success": True, "token": token}
+            return {"success": True, "token": CreateToken(data={"sub": email})}
 
 
 @app.post("/SendEmail")
 def SendEmail(content: dict, response: Response):
     global email_keys
-    email = content.get("email")
-    number = random.randint(100000, 999999)
+    email, number = content.get("email"), random.randint(100000, 999999)
     email_keys[email] = number
-    print(number)
     with open("Web/Compilated/email.html", "r", encoding="utf-8") as f:
         msg = EmailMessage()
         msg["Subject"], msg["From"], msg["To"] = "Votre code de connexion à my-youtube.", sender_email, email
@@ -273,9 +270,7 @@ def Login(content: dict, response: Response):
         with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
             user_data = json.load(f)
             if pwd_context.verify(no_rainbow_tables + content.get("password"), user_data["password"]):
-                token = create_token(data={"sub": email})
-                response.set_cookie(key="session_token", value=token, httponly=True, secure=True, samesite="lax", path="/")
-                return {"success": True, "token": token}
+                return {"success": True, "token": CreateToken(data={"sub": email})}
     except FileNotFoundError:
         pass
     raise HTTPException(status_code=401, detail="Identifiants incorrects.")
@@ -283,12 +278,11 @@ def Login(content: dict, response: Response):
 
 @app.post("/Logout")
 def Logout(response: Response):
-    response.delete_cookie("session_token")
     return {"message": "Déconnecté."}
 
 
 @app.post("/Youtube")
-def SearchYoutube(content: dict, username: str = Depends(check_token)):
+def SearchYoutube(content: dict, username: str = Depends(CheckConnection)):
     filter, title, duration = content.get("filter"), content.get("title"), content.get("duration")
     max_length, min_length = duration.get("max"), duration.get("min")
     youtubeurs, dates = content.get("creators"), content.get("dates")
@@ -323,21 +317,33 @@ def SearchYoutube(content: dict, username: str = Depends(check_token)):
 
 
 @app.post("/GetYoutubeurs")
-def SendYoutubeurs(username: str = Depends(check_token)):
+def SendYoutubeurs(username: str = Depends(CheckConnection)):
     with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
         youtubeurs = json.load(f)["youtubeurs"]
         return youtubeurs
 
 
 @app.get("/", response_class=HTMLResponse)
-def BaseFile(username: str = Depends(check_token)):
+def BaseFile():
     with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
         return BaseFile.read()
 
 
-@app.get("/Login", response_class=HTMLResponse)
+@app.get("/login", response_class=HTMLResponse)
 def LoginPage():
     with open("Web/Compilated/login.html", "r", encoding="utf-8") as BaseFile:
+        return BaseFile.read()
+
+
+@app.get("/paiement", response_class=HTMLResponse)
+def Paiement(username: str = Depends(CheckConnection)):
+    with open("Web/Compilated/paiement.html", "r", encoding="utf-8") as BaseFile:
+        return BaseFile.read()
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def Dashboard(username: str = Depends(CheckConnection)):
+    with open("Web/Compilated/main.html", "r", encoding="utf-8") as BaseFile:
         return BaseFile.read()
 
 

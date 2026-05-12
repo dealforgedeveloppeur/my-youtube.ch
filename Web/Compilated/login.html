@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test backend – Auth n8n</title>
-    <script src="https://js.stripe.com/v3/"></script>
+    <title>Connexion – AstroVoice my-youtube</title>
     <style>
-        /* Style minimaliste, fond sombre léger */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #1a1a2e;
@@ -35,6 +33,7 @@
             background: #0f3460;
             color: white;
             font-size: 1rem;
+            box-sizing: border-box;
         }
         input:focus { border-color: #e94560; outline: none; }
         button {
@@ -75,18 +74,6 @@
             font-size: 1.5rem;
             padding: 0.5rem;
         }
-        #card-element {
-            background: #0f3460;
-            padding: 0.8rem;
-            border-radius: 6px;
-            margin: 1rem 0;
-        }
-        .stripe-badge {
-            font-size: 0.8rem;
-            color: #aaa;
-            text-align: center;
-            margin-top: 0.5rem;
-        }
         .toast {
             position: fixed;
             top: 1rem;
@@ -103,7 +90,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- ÉTAT CONNEXION -->
         <div id="step-login">
             <h2>Connexion</h2>
             <label>Email</label>
@@ -116,7 +102,6 @@
             <a class="link" id="go-register">Créer un compte</a>
         </div>
 
-        <!-- ÉTAT INSCRIPTION -->
         <div id="step-register" class="hidden">
             <h2>Créer un compte</h2>
             <label>Nom d'utilisateur</label>
@@ -132,7 +117,6 @@
             <a class="link" id="go-login">Déjà un compte ? Se connecter</a>
         </div>
 
-        <!-- ÉTAT VÉRIFICATION -->
         <div id="step-verify" class="hidden">
             <h2>Vérification email</h2>
             <p style="text-align:center;font-size:0.9rem;" id="verify-info"></p>
@@ -149,42 +133,16 @@
             <a class="link" id="resend-code">Renvoyer le code</a><br>
             <a class="link" id="back-register">← Modifier mes informations</a>
         </div>
-
-        <!-- ÉTAT PAIEMENT -->
-        <div id="step-payment" class="hidden">
-            <h2>Paiement (29€/mois)</h2>
-            <div id="card-element"></div>
-            <div class="error" id="card-error"></div>
-            <button id="payment-btn">Payer 29€</button>
-            <div class="stripe-badge">🔒 Paiement sécurisé Stripe</div>
-            <a class="link" id="back-verify">← Retour</a>
-        </div>
-
-        <!-- ÉTAT SUCCÈS -->
-        <div id="step-success" class="hidden">
-            <h2>🎉 Inscription réussie !</h2>
-            <p style="text-align:center;">Votre compte a été créé. Redirection vers le tableau de bord...</p>
-            <button id="dashboard-btn">Aller au tableau de bord</button>
-        </div>
     </div>
-    <script>
-        // ⚠️ Remplacez par votre clé publique Stripe (test ou live)
-        const STRIPE_KEY = 'pk_test_51RBfArKd8Y7mN3xLq2pZwVcT0aB1nC4dE5fG6hI7jK8lM9oP0qRsTuVwXyZaBcDeFgHiJkLmNoPqRsTuVwXyZ';
-        const stripe = Stripe(STRIPE_KEY);
-        const elements = stripe.elements();
-        let cardElement = null;
 
-        // ------ VARIABLES GLOBALES ------
+    <script>
         let currentEmail = '';
         let currentUsername = '';
 
-        // ------ DOM ELEMENTS ------
         const steps = {
             login: document.getElementById('step-login'),
             register: document.getElementById('step-register'),
-            verify: document.getElementById('step-verify'),
-            payment: document.getElementById('step-payment'),
-            success: document.getElementById('step-success')
+            verify: document.getElementById('step-verify')
         };
 
         function showStep(step) {
@@ -192,7 +150,6 @@
             steps[step].classList.remove('hidden');
         }
 
-        // ------ FONCTIONS UTILITAIRES ------
         function showToast(msg) {
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -217,27 +174,26 @@
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
-        // ------ APPELS API ------
+        // ------ APPELS API SIMPLIFIÉS VIA BEARER ------
         async function apiCall(url, data) {
-        const token = localStorage.getItem('auth_token');
-        const headers = {'Content-Type': 'application/json'};
-        if (token) { headers['Authorization'] = `Bearer ${token}`;}
+            const token = localStorage.getItem('auth_token');
+            const headers = {'Content-Type': 'application/json'};
+            if (token) { headers['Authorization'] = `Bearer ${token}`;}
             try {
                 const res = await fetch(url, {
                     method: 'POST',
-                    credentials: 'include',
                     headers: headers,
                     body: JSON.stringify(data)
                 });
                 const json = await res.json();
-                if (!res.ok) throw new Error(json.message || `Erreur ${res.status}`);
+                if (!res.ok) throw new Error(json.detail || json.message || `Erreur ${res.status}`);
                 return { success: true, data: json };
             } catch (err) {
                 return { success: false, error: err.message };
             }
         }
 
-        // ------ GESTION DU CODE À 6 CHIFFRES ------
+        // ------ LOGIQUE CHIP CODES ------
         function setupCodeInputs() {
             const inputs = document.querySelectorAll('.code-digit');
             inputs.forEach((input, idx) => {
@@ -293,16 +249,8 @@
             showStep('register');
         });
 
-        document.getElementById('back-verify').addEventListener('click', () => {
-            clearErrors();
-            resetCodeInputs();
-            showStep('verify');
-        });
-
         document.getElementById('resend-code').addEventListener('click', async () => {
-            await apiCall('SendEmail', {
-                email: document.getElementById('login-email').value.trim(),
-            });
+            await apiCall('SendEmail', { email: currentEmail });
             showToast('Nouveau code envoyé');
             resetCodeInputs();
             document.querySelector('.code-digit[data-index="0"]').focus();
@@ -331,16 +279,16 @@
             btn.disabled = false;
             btn.textContent = 'Se connecter';
 
-            if (res.success) {
-                if (res.data.token) {
-                    localStorage.setItem('auth_token', res.data.token);
-                }
+            if (res.success && res.data && res.data.token) {
+                localStorage.setItem('auth_token', res.data.token);
+                showToast('Connecté ! Redirection...');
+                setTimeout(() => { window.location.href = '/dashboard'; }, 150);
             } else {
                 showToast(res.error || 'Échec de la connexion');
             }
         });
 
-        // ------ ACTION: INSCRIPTION (envoi code) ------
+        // ------ ACTION: INSCRIPTION ------
         document.getElementById('register-btn').addEventListener('click', async () => {
             clearErrors();
             const username = document.getElementById('reg-username').value.trim();
@@ -367,7 +315,7 @@
             const btn = document.getElementById('register-btn');
             btn.disabled = true;
             btn.textContent = 'Envoi du code...';
-            const res = await apiCall('SendEmail', {email: email});
+            const res = await apiCall('SendEmail', { email: email });
             btn.disabled = false;
             btn.textContent = 'Envoyer le code';
 
@@ -381,7 +329,7 @@
             }
         });
 
-        // ------ ACTION: VÉRIFICATION CODE ------
+        // ------ ACTION: VÉRIFICATION & AUTHENTIFICATION FINALE ------
         document.getElementById('verify-btn').addEventListener('click', async () => {
             clearErrors();
             const code = getCode();
@@ -393,40 +341,19 @@
             const btn = document.getElementById('verify-btn');
             btn.disabled = true;
             btn.textContent = 'Vérification...';
+
             const username = document.getElementById('reg-username').value.trim();
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
+
             const res = await apiCall('CheckEmail', { email: email, username: username, password: password, code: code });
             btn.disabled = false;
             btn.textContent = 'Vérifier le code';
 
-            if (res.success) {
-                window.location.href = '/my-youtube';
-                // Montage Stripe lors du passage au paiement
-                if (!cardElement) {
-                    cardElement = elements.create('card', {
-                        style: {
-                            base: {
-                                fontSize: '16px',
-                                color: '#ffffff',
-                                '::placeholder': { color: '#aab7c4' }
-                            }
-                        }
-                    });
-                    cardElement.mount('#card-element');
-                    cardElement.on('change', (event) => {
-                        const displayError = document.getElementById('card-error');
-                        if (event.error) {
-                            displayError.textContent = event.error.message;
-                            displayError.style.display = 'block';
-                        } else {
-                            displayError.textContent = '';
-                            displayError.style.display = 'none';
-                        }
-                    });
-                }
-                showStep('payment');
-                showToast('Email vérifié !');
+            if (res.success && res.data && res.data.token) {
+                localStorage.setItem('auth_token', res.data.token);
+                showToast('Compte validé et connecté !');
+                setTimeout(() => { window.location.href = '/dashboard'; }, 150);
             } else {
                 setError('verify-code-error', res.error || 'Code incorrect');
                 resetCodeInputs();
@@ -434,57 +361,8 @@
             }
         });
 
-        // ------ ACTION: PAIEMENT ------
-        document.getElementById('payment-btn').addEventListener('click', async () => {
-            const btn = document.getElementById('payment-btn');
-            const errorEl = document.getElementById('card-error');
-            btn.disabled = true;
-            btn.textContent = 'Paiement en cours...';
-
-            // Création du PaymentMethod via Stripe
-            const { error, paymentMethod } = await stripe.createPaymentMethod({
-                type: 'card',
-                card: cardElement,
-            });
-
-            if (error) {
-                errorEl.textContent = error.message;
-                errorEl.style.display = 'block';
-                btn.disabled = false;
-                btn.textContent = 'Payer 29€';
-                return;
-            }
-
-            // Envoi au backend
-            const res = await apiCall('ProcessPayment', {
-                email: currentEmail,
-                username: currentUsername,
-                paymentMethodId: paymentMethod.id,
-                plan: 'pro',
-                amount: 2900
-            });
-
-            if (res.success) {
-                showToast('Paiement accepté !');
-                showStep('success');
-            } else {
-                errorEl.textContent = res.error || 'Échec du paiement';
-                errorEl.style.display = 'block';
-            }
-            btn.disabled = false;
-            btn.textContent = 'Payer 29€';
-        });
-
-        // ------ REDIRECTION FINALE ------
-        document.getElementById('dashboard-btn').addEventListener('click', () => {
-            window.location.href = '/dashboard';
-        });
-
-        // ------ INIT ------
         setupCodeInputs();
         showStep('login');
-
-        console.log('✅ Testeur backend prêt. Endpoints attendus : /SendEmail, /CheckEmail, /ProcessPayment, /Login');
     </script>
 </body>
 </html>
