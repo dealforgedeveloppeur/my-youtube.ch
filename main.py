@@ -227,6 +227,7 @@ def CreateToken(data: dict):
 async def CheckConnection(request: Request, session_token=None):
     auth_header = str(request.headers.get("Authorization"))
     session_token = auth_header[7:]
+    print(session_token)
     payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
     username: str = payload.get("sub")
     if username is None:
