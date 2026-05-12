@@ -148,11 +148,20 @@ def SubscribeToChannel(channel_id: str):
     return True
 
 
-def AddNewYoutubeur(name):
+def AddNewYoutubeur(username, name):
     UCID, true_name = AddYoutubeurToJson(name)
     if true_name is not None:
         LoadNewYoutubeur(UCID, true_name)
         print(SubscribeToChannel(UCID))
+    with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+        data["youtubeurs"].append(true_name)
+    with NamedTemporaryFile("w", delete=False, dir="Users", encoding="utf-8") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+        temp_name = file.name
+    os.replace(temp_name, f"Users/{username}.json")
+    if os.path.exists(temp_name):
+        os.remove(temp_name)
 
 
 def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.datetime.now, min_length: str, max_length: str, title_words: list):
@@ -314,6 +323,7 @@ def SearchYoutube(content: dict, username: str = Depends(CheckConnection)):
     end_date = DateSlicer(end_date()) if callable(end_date) else end_date
     videos = GetVideos(username=username, names=youtubeurs, start_date=start_date, end_date=end_date, min_length=min_length, max_length=max_length, title=title)
     return videos
+
 
 @app.post("/Search")
 def SearchOnYoutube(content: dict, username: str = Depends(CheckConnection)):
