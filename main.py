@@ -230,6 +230,7 @@ async def CheckConnection(request: Request, session_token=None):
     print(session_token)
     payload = jwt.decode(session_token, secret_key, algorithms=[algorithm])
     username: str = payload.get("sub")
+    print(username)
     if username is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur invalide.")
     if os.path.exists(f"Users/{username}.json"):
