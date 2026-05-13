@@ -107,7 +107,7 @@ def AddYoutubeurToJson(name):
 
 
 def LoadNewYoutubeur(UCID, name):
-    result = subprocess.run(["yt-dlp.exe", "--flat-playlist", "--print", "%(id)s", f"https://www.youtube.com/playlist?list={UCIDtoUUID(UCID)}"], capture_output=True, text=True)
+    result = subprocess.run(["yt-dlp", "--flat-playlist", "--print", "%(id)s", f"https://www.youtube.com/playlist?list={UCIDtoUUID(UCID)}"], capture_output=True, text=True)
     video_ids = result.stdout.strip().split("\n")[::-1]
     all_videos = {"videos": {}, "dates": [], "ids": []}
     API_KEY = GetRandomAPIKey(api_keys_number)
