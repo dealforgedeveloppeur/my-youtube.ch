@@ -155,7 +155,8 @@ def AddNewYoutubeur(username, name):
         print(SubscribeToChannel(UCID))
     with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
         data = json.load(f)
-        data["youtubeurs"].append(true_name)
+        if not true_name in data["youtubeurs"]:
+            data["youtubeurs"].append(true_name)
     with NamedTemporaryFile("w", delete=False, dir="Users", encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
         temp_name = file.name
@@ -339,6 +340,42 @@ def SendYoutubeurs(username: str = Depends(CheckConnection)):
     with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
         youtubeurs = json.load(f)["youtubeurs"]
         return youtubeurs
+
+
+@app.post("/GetWebsubInfos")
+async def CheckYoutubeWebsub(request: Request, name=None):
+    body_bytes = await request.body()
+    content_xml = body_bytes.decode("utf-8")
+    content = content_xml.split("<entry>")[1].split("</entry>")[0]
+    channel_id = content.split("<yt:channelId>")[1].split("</yt:channelId>")[0]
+    with open("Youtubeurs/youtubeurs.json", "r", encoding="utf-8") as f:
+        channels = json.load(f).items()
+        for channel in channels:
+            if channel[1] == channel_id:
+                name = channel[0]
+                break
+    if name is None:
+        return {"status": "accepted"}
+    id = content.split("<yt:videoId>")[1].split("</yt:videoId>")[0]
+    with open(f"Youtubeurs/{name}.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+        if not id in data["ids"][-1]:
+            date = DateSlicer(datetime.datetime.now())
+            title = content.split("<title>")[1].split("</title>")[0]
+            length = json.loads(subprocess.run(["yt-dlp", "--no-flat-playlist", "--print", "%(duration)s", f"https://www.youtube.com/watch?v={id}"], capture_output=True, text=True).stdout)
+            data["videos"][id] = [title, length, date]
+            if date == data["dates"][-1]:
+                data["ids"][-1].append(id)
+            else:
+                data["dates"].append(date)
+                data["ids"].append([id])
+    with NamedTemporaryFile("w", delete=False, dir="Youtubeurs", encoding="utf-8") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+        temp_name = file.name
+    os.replace(temp_name, f"Youtubeurs/{name}.json")
+    if os.path.exists(temp_name):
+        os.remove(temp_name)
+    return {"status": "accepted"}
 
 
 @app.get("/", response_class=HTMLResponse)
