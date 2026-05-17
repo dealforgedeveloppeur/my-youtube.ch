@@ -34,6 +34,15 @@ def ChunkList(liste: list, taille: int):
         yield liste[_:_ + taille]
 
 
+def SecondsToTime(time):
+    hours, minutes, seconds = int(time / 3600), int(time % 3600 / 60 + 100), int(time % 60 + 100)
+    if not hours == 0:
+        time = str(hours) + ":" + str(minutes)[1:] + ":" + str(seconds)[1:]
+    else:
+        time = str(minutes)[1:] + ":" + str(seconds)[1:]
+    return time
+
+
 def DateSlicer(date: datetime.datetime.date):
     return str(date)[:10]
 
@@ -155,7 +164,9 @@ def AddNewYoutubeur(username, name):
         print(SubscribeToChannel(UCID))
     with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
         data = json.load(f)
-        if not true_name in data["youtubeurs"]:
+        if true_name in data["youtubeurs"]:
+            pass
+        else:
             data["youtubeurs"].append(true_name)
     with NamedTemporaryFile("w", delete=False, dir="Users", encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
@@ -238,7 +249,8 @@ async def CheckConnection(request: Request, session_token=None):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur invalide.")
         if os.path.exists(f"Users/{username}.json"):
             with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
-                if False:#json.load(f)["paiement"] < DateSlicer(datetime.datetime.now()):
+                if False:
+                    # json.load(f)["paiement"] < DateSlicer(datetime.datetime.now()):
                     raise HTTPException(status_code=401, detail="Paiement requis.")
         return username
     except JWTError:
@@ -271,6 +283,11 @@ def SendEmail(content: dict, response: Response):
             smtp.send_message(msg)
     except Exception as e:
         print(f"Une erreur est survenue lors de l'envoi : {e}")
+
+
+@app.post("/IsConnected")
+def IsConnected(response=Depends(CheckConnection)):
+    return {"success": True}
 
 
 @app.post("/Login")
@@ -346,8 +363,21 @@ def SendYoutubeurs(username: str = Depends(CheckConnection)):
 async def CheckYoutubeWebsub(request: Request, name=None):
     body_bytes = await request.body()
     content_xml = body_bytes.decode("utf-8")
-    content = content_xml.split("<entry>")[1].split("</entry>")[0]
-    channel_id = content.split("<yt:channelId>")[1].split("</yt:channelId>")[0]
+    if "<entry>" not in content_xml:
+        return {"status": "accepted"}
+    try:
+        namespaces = {'atom': 'http://www.w3.org/2005/Atom', 'yt': 'http://www.youtube.com/xml/schemas/2015'}
+        root = ET.fromstring(content_xml)
+        entry = root.find('atom:entry', namespaces)
+        if entry is None:
+            return {"status": "accepted"}
+        channel_id = entry.find('yt:channelId', namespaces).text
+        video_id = entry.find('yt:videoId', namespaces).text
+        raw_title = entry.find('atom:title', namespaces).text
+        title = html.unescape(raw_title) if raw_title else "Sans titre"
+    except Exception as e:
+        print(f"Erreur lors du parsing XML: {e}")
+        return {"status": "accepted"}
     with open("Youtubeurs/youtubeurs.json", "r", encoding="utf-8") as f:
         channels = json.load(f).items()
         for channel in channels:
@@ -356,23 +386,28 @@ async def CheckYoutubeWebsub(request: Request, name=None):
                 break
     if name is None:
         return {"status": "accepted"}
-    id = content.split("<yt:videoId>")[1].split("</yt:videoId>")[0]
-    with open(f"Youtubeurs/{name}.json", "r", encoding="utf-8") as f:
+    file_path = f"Youtubeurs/{name}.json"
+    with open(file_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-        if not id in data["ids"][-1]:
+        if not (video_id in data["ids"][-1]):
             date = DateSlicer(datetime.datetime.now())
-            title = content.split("<title>")[1].split("</title>")[0]
-            length = json.loads(subprocess.run(["yt-dlp", "--no-flat-playlist", "--print", "%(duration)s", f"https://www.youtube.com/watch?v={id}"], capture_output=True, text=True).stdout)
-            data["videos"][id] = [title, length, date]
+            proc = await asyncio.create_subprocess_exec("/mnt/extra_disk/my-youtube.ch/yt-dlp", "--no-flat-playlist", "--print", "%(duration)s", f"https://www.youtube.com/watch?v={video_id}", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            stdout, _ = await proc.communicate()
+            try:
+                duration_str = stdout.decode().strip()
+                length = TimeConverter(json.loads(duration_str))
+            except Exception:
+                length = "00:00"
+            data["videos"][video_id] = [title, length, date]
             if date == data["dates"][-1]:
-                data["ids"][-1].append(id)
+                data["ids"][-1].append(video_id)
             else:
                 data["dates"].append(date)
-                data["ids"].append([id])
+                data["ids"].append([video_id])
     with NamedTemporaryFile("w", delete=False, dir="Youtubeurs", encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
         temp_name = file.name
-    os.replace(temp_name, f"Youtubeurs/{name}.json")
+    os.replace(temp_name, file_path)
     if os.path.exists(temp_name):
         os.remove(temp_name)
     return {"status": "accepted"}
@@ -404,10 +439,7 @@ def Dashboard():
 
 @app.get("/GetWebsubInfos")
 def CheckYoutubeWebsub(request: Request):
-    if request.query_params.get("hub.mode") == "subscribe":
-        challenge = request.query_params.get("hub.challenge")
-        if not challenge:
-            return Response("Missing challenge")
-        return Response(challenge)
-    else:
-        print(request)
+    challenge = request.query_params.get("hub.challenge")
+    if not challenge:
+        return Response("Missing challenge")
+    return Response(challenge)

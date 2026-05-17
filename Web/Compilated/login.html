@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <script>if (localStorage.getItem('auth_token')){const token = localStorage.getItem('auth_token');const res = fetch('IsConnected', {method: 'POST', headers: {'Content-Type': 'application/json', headers['Authorization']: `Bearer ${token}}, body: JSON.stringify(data)});const json = res.json();if (res.ok) {window.location.href='/my-youtube/dashboard';}}</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion – AstroVoice my-youtube</title>
@@ -281,6 +282,7 @@
 
             if (res.success && res.data && res.data.token) {
                 localStorage.setItem('auth_token', res.data.token);
+                localStorage.setItem('seen_token', res.data.seen_token);
                 showToast('Connecté ! Redirection...');
                 setTimeout(() => { window.location.href = '/my-youtube/dashboard'; }, 150);
             } else {
