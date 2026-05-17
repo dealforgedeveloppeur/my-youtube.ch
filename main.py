@@ -265,7 +265,7 @@ def CheckEmail(content: dict, response: Response):
         with open(f"Users/{email}.json", "w", encoding="utf-8") as f:
             datas = {"password": pwd_context.hash(no_rainbow_tables + password), "email": email, "username": username, "youtubeurs": [], "watch_later": [], "downloaded": []}
             json.dump(datas, f, indent=2, ensure_ascii=False)
-            return {"success": True, "token": CreateToken(data={"sub": email})}
+            return {"success": True, "token": CreateToken(data={"sub": email}), "seen_token": "True"}
 
 
 @app.post("/SendEmail")
@@ -297,7 +297,7 @@ def Login(content: dict, response: Response):
         with open(f"Users/{email}.json", "r", encoding="utf-8") as f:
             user_data = json.load(f)
             if pwd_context.verify(no_rainbow_tables + content.get("password"), user_data["password"]):
-                return {"success": True, "token": CreateToken(data={"sub": email})}
+                return {"success": True, "token": CreateToken(data={"sub": email}), "seen_token": "True"}
     except FileNotFoundError:
         pass
     raise HTTPException(status_code=401, detail="Identifiants incorrects.")
