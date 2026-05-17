@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <script>if (localStorage.getItem('auth_token')){const token = localStorage.getItem('auth_token');const res = fetch('IsConnected', {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify(data)});const json = res.json();if (res.ok) {window.location.href='/my-youtube/dashboard';}}</script>
+    <script>if (localStorage.getItem('auth_token')){const token = localStorage.getItem('auth_token');const res = fetch('IsConnected', {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}});const json = res.json();if (res.ok) {window.location.href='/my-youtube/dashboard';}}</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion – AstroVoice my-youtube</title>
