@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <script>async function checkTokenAndPost() {if (localStorage.getItem('auth_token')){const token = localStorage.getItem('auth_token');const res = await fetch('IsConnected', {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}});const json = await res.json();if (res.ok) {window.location.href='/my-youtube/dashboard';}}} checkTokenAndPost();</script>
-    <script>if (localStorage.getItem('seen_token')){window.location.href='/my-youtube/login';}</script>
+    <script>async function checkTokenAndPost() {if (localStorage.getItem('auth_token')){const token = localStorage.getItem('auth_token');const res = await fetch('IsConnected', {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}});const json = await res.json();if (res.ok) {window.location.href='/my-youtube/dashboard';} else {if (localStorage.getItem('seen_token')){window.location.href='/my-youtube/login';}}} checkTokenAndPost();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My YouTube - Présentation</title>
