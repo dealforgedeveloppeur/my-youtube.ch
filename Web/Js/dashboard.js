@@ -62,7 +62,7 @@ function executeInjection() {
             thumbnail.src = `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
             thumbnail.loading = "lazy";
             thumbnail.onclick = () => {
-                window.open(`https://app.astrovoice.ch/my-youtube/watch?id=${video.id}&title={video.title}`, '_blank');
+                window.open(`https://app.astrovoice.ch/my-youtube/watch?id=${video.id}&title=${video.title}`, '_blank');
             };
             clone.querySelector('.text').textContent = video.title;
             clone.querySelector('.duration').textContent = video.duration;
