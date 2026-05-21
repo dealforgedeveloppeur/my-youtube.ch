@@ -62,7 +62,7 @@ function executeInjection() {
             thumbnail.src = `https://i.ytimg.com/vi/${video.id}/mqdefault.jpg`;
             thumbnail.loading = "lazy";
             thumbnail.onclick = () => {
-                communication({url: video.id, title: video.title, download: video.download}, 'Open');
+                window.open(`https://app.astrovoice.ch/my-youtube/watch?id=${video.id}&title={video.title}`, '_blank');
             };
             clone.querySelector('.text').textContent = video.title;
             clone.querySelector('.duration').textContent = video.duration;
@@ -79,8 +79,23 @@ function executeInjection() {
     }
 }
 
-async function checkTokenAndPost() {if (localStorage.getItem('auth_token')){const token = localStorage.getItem('auth_token');const res = await fetch('IsConnected', {method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}});const json = await res.json();if (res.ok) {window.location.href='/my-youtube/dashboard';}}}checkTokenAndPost();
-
+async function checkTokenAndPost() {
+    if (localStorage.getItem('auth_token')){
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch('IsConnected', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const json = await res.json();
+        if (res.ok) {
+            window.location.href='/my-youtube/dashboard';
+        }
+    }
+}
+checkTokenAndPost();
 
 function renderNextVideos(isInitial = false) {
     if (isNextBatchLoading) return;

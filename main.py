@@ -12,6 +12,7 @@ from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from itertools import chain
 from functools import partial
+from html import escape
 
 
 def CompileWebFiles():
@@ -423,6 +424,12 @@ def BaseFile():
 def LoginPage():
     with open("Web/Compilated/login.html", "r", encoding="utf-8") as BaseFile:
         return BaseFile.read()
+
+
+@app.get("/watch", response_class=HTMLResponse)
+def Watch(id: str, title: str):
+    with open("Web/Compilated/watch.html", "r", encoding="utf-8") as BaseFile:
+        return BaseFile.read().replace("***Title***", escape(title)).replace("***Id***", escape(id))
 
 
 @app.get("/paiement", response_class=HTMLResponse)
