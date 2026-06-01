@@ -1,4 +1,4 @@
-import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, bisect, urllib.request, re, random, subprocess, smtplib
+import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, bisect, urllib.request, re, random, subprocess, smtplib, html
 from email.message import EmailMessage
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
