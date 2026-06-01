@@ -89,7 +89,11 @@ def UCIDtoUUID(UCID):
 
 
 def GetUsualName(name):
-    return requests.get(f"https://www.youtube.com/{name}").text.split("var ytInitialData =")[0].split('<meta property="og:title" content="')[1].split('">')[0]
+    while True:
+        try:
+            return requests.get(f"https://www.youtube.com/{name}").text.split("var ytInitialData =")[0].split('<meta property="og:title" content="')[1].split('">')[0]
+        except:
+            pass
 
 
 def SearchUCID(name):
