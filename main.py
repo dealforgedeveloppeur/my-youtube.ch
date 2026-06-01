@@ -201,6 +201,7 @@ def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.date
         print(all_videos)
         start = bisect.bisect_left(all_videos["dates"], start_date)
         end = bisect.bisect_right(all_videos["dates"], end_date)
+        print(start, end)
         result = list(chain.from_iterable(all_videos["ids"][start:end]))
         videos = []
         for video in result:
