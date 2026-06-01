@@ -101,7 +101,7 @@ async function checkTokenAndPost() {
             }
         });
         const json = await res.json();
-        if !(res.ok) {
+        if (!res.ok) {
             window.location.href='/my-youtube/login';
         }
     }
