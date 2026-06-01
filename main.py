@@ -74,7 +74,7 @@ def TimeConverter(time):
     pattern = r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?'
     match = re.match(pattern, time)
     if not match:
-        return "00:00"
+        return "03:01"
     hours = int(match.group(1) or 0)
     minutes = int(match.group(2) or 0)
     seconds = int(match.group(3) or 0)
@@ -198,10 +198,8 @@ def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.date
         true_name = all_names[name]
     with open(f"Youtubeurs/{name}.json", "r", encoding="utf-8") as f:
         all_videos = json.load(f)
-        print(all_videos)
         start = bisect.bisect_left(all_videos["dates"], start_date)
         end = bisect.bisect_right(all_videos["dates"], end_date)
-        print(start, end)
         result = list(chain.from_iterable(all_videos["ids"][start:end]))
         videos = []
         for video in result:

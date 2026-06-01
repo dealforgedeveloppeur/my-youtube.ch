@@ -1,6 +1,17 @@
-const todayStr = new Date().toISOString().split('T')[0], CHUNK_SIZE = 4 * 8;
-['date_1', 'date_21', 'date_22'].forEach(id => { const el = document.getElementById(id); if(el) { el.value = todayStr; el.max = todayStr;}});
+const CHUNK_SIZE = 4 * 8,  DATE_IDS = ['date_1', 'date_21', 'date_22'];
 let allData = [], currentIndex = 0, isNextBatchLoading = false;
+
+function refreshDateLimits() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    DATE_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.max = todayStr;
+        if (!el.value || el.value > todayStr) {
+            el.value = todayStr;
+        }
+    });
+}
 
 function updateResultsCount(count) {
     let header = document.getElementById('results-header');
@@ -158,6 +169,7 @@ async function sendSearch() {
     } finally {
         loader.style.display = 'none';
         scroller.style.opacity = '1';
+        chargerYoutubeurs();
     }
 }
 
@@ -181,6 +193,14 @@ function toggleDropdown(event) {
 
 document.getElementById('dropdownContent').addEventListener('click', e => e.stopPropagation());
 document.addEventListener('click', () => document.getElementById('dropdown').classList.remove('open'));
+
+DATE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener('focus', refreshDateLimits);
+    el.addEventListener('click', refreshDateLimits);
+});
 
 async function initApp() {
     await sendSearch();
