@@ -169,7 +169,6 @@ async function sendSearch() {
     } finally {
         loader.style.display = 'none';
         scroller.style.opacity = '1';
-        chargerYoutubeurs();
     }
 }
 
