@@ -188,7 +188,7 @@ def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.date
         for video in result:
             if not min_length or TimeToNumber(min_length) <= TimeToNumber(all_videos["videos"][video][1]) <= TimeToNumber(max_length):
                 if not title_words:
-                    videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False})
+                    videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False, "youtubeur": name})
                 for word in title_words:
                     if len(all_videos["videos"][video][0].lower().split(word)) > 1:
                         videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False, "youtubeur": name})
