@@ -1,4 +1,4 @@
-import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, bisect, urllib.request, re, random, subprocess, smtplib, html
+import datetime, requests, os, threading, time, socketserver, webbrowser, json, tempfile, bisect, urllib.request, re, random, subprocess, smtplib, html, asyncio
 from email.message import EmailMessage
 from tempfile import NamedTemporaryFile
 from fastapi import FastAPI, HTTPException, Response, Cookie, Depends, status, Request
@@ -393,7 +393,7 @@ async def CheckYoutubeWebsub(request: Request, name=None):
         data = json.load(f)
         if not (video_id in data["ids"][-1]):
             date = DateSlicer(datetime.datetime.now())
-            proc = await asyncio.create_subprocess_exec("/mnt/extra_disk/my-youtube.ch/yt-dlp", "--no-flat-playlist", "--print", "%(duration)s", f"https://www.youtube.com/watch?v={video_id}", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            proc = await asyncio.create_subprocess_exec("/mnt/extra_disk/my-youtube.ch/yt-dlp", "--no-flat-playlist", "--print", "%(duration)s", f"https://www.youtube.com/watch?v={video_id}")
             stdout, _ = await proc.communicate()
             try:
                 duration_str = stdout.decode().strip()
