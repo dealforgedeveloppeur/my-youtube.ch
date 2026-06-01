@@ -198,6 +198,7 @@ def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.date
         true_name = all_names[name]
     with open(f"Youtubeurs/{name}.json", "r", encoding="utf-8") as f:
         all_videos = json.load(f)
+        print(all_videos)
         start = bisect.bisect_left(all_videos["dates"], start_date)
         end = bisect.bisect_right(all_videos["dates"], end_date)
         result = list(chain.from_iterable(all_videos["ids"][start:end]))
