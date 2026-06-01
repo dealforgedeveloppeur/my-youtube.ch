@@ -66,7 +66,7 @@ function executeInjection() {
             };
             clone.querySelector('.text').textContent = video.title;
             clone.querySelector('.duration').textContent = video.duration;
-            clone.querySelector('.category').textContent = 'Vidéo';
+            clone.querySelector('.category').textContent = video.youtubeur;
             wrapper.appendChild(clone);
         });
         mainFragment.appendChild(wrapper);

@@ -10,6 +10,7 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
+import xml.etree.ElementTree as ET
 from itertools import chain
 from functools import partial
 from html import escape
@@ -190,7 +191,7 @@ def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.date
                     videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False})
                 for word in title_words:
                     if len(all_videos["videos"][video][0].lower().split(word)) > 1:
-                        videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False})
+                        videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False, "youtubeur": name})
                         break
     return videos
 
