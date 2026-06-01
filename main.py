@@ -177,19 +177,19 @@ def AddNewYoutubeur(username, name):
     UCID, true_name = AddYoutubeurToJson(name)
     if true_name is not None:
         LoadNewYoutubeur(UCID, true_name)
-        print(SubscribeToChannel(UCID))
     with open(f"Users/{username}.json", "r", encoding="utf-8") as f:
         data = json.load(f)
         if true_name in data["youtubeurs"]:
             pass
         else:
             data["youtubeurs"].append(true_name)
-    with NamedTemporaryFile("w", delete=False, dir="Users", encoding="utf-8") as file:
-        json.dump(data, file, indent=2, ensure_ascii=False)
-        temp_name = file.name
-    os.replace(temp_name, f"Users/{username}.json")
-    if os.path.exists(temp_name):
-        os.remove(temp_name)
+            print(SubscribeToChannel(UCID))
+            with NamedTemporaryFile("w", delete=False, dir="Users", encoding="utf-8") as file:
+                json.dump(data, file, indent=2, ensure_ascii=False)
+                temp_name = file.name
+            os.replace(temp_name, f"Users/{username}.json")
+            if os.path.exists(temp_name):
+                os.remove(temp_name)
 
 
 def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.datetime.now, min_length: str, max_length: str, title_words: list):
