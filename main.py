@@ -88,6 +88,10 @@ def UCIDtoUUID(UCID):
     return f"UU{UCID[2:]}"
 
 
+def GetUsualName(name):
+    return requests.get(f"https://www.youtube.com/{name}").text.split("var ytInitialData =")[1].split(";</script>")[0].split('"a11yLabel"')[1].split("„")[1].split("“")[0]
+
+
 def SearchUCID(name):
     try:
         data = json.loads(requests.get(f"https://www.youtube.com/{name}").text.split("var ytInitialData =")[1].split(";</script>")[0])["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][0]["tabRenderer"]["endpoint"]["browseEndpoint"]
@@ -112,6 +116,16 @@ def AddYoutubeurToJson(name):
         json.dump(data, file, indent=2, ensure_ascii=False)
         temp_name = file.name
     os.replace(temp_name, f"Youtubeurs/youtubeurs.json")
+    if os.path.exists(temp_name):
+        os.remove(temp_name)
+    with open("Youtubeurs/names.json", "r", encoding="utf-8") as f:
+        data = json.loads(f.read())
+        youtubeurs = list(data.keys())
+        data[true_name] = GetUsualName(true_name)
+    with NamedTemporaryFile("w", delete=False, dir="Youtubeurs", encoding="utf-8") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+        temp_name = file.name
+    os.replace(temp_name, f"Youtubeurs/names.json")
     if os.path.exists(temp_name):
         os.remove(temp_name)
     return UCID, true_name
@@ -179,6 +193,9 @@ def AddNewYoutubeur(username, name):
 
 
 def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.datetime.now, min_length: str, max_length: str, title_words: list):
+    with open(f"Youtubeurs/names.json", "r", encoding="utf-8") as f:
+        all_names = json.load(f)
+        true_name = all_names[name]
     with open(f"Youtubeurs/{name}.json", "r", encoding="utf-8") as f:
         all_videos = json.load(f)
         start = bisect.bisect_left(all_videos["dates"], start_date)
@@ -188,10 +205,10 @@ def GetVideoFor(name, start_date: datetime.datetime.now, end_date: datetime.date
         for video in result:
             if not min_length or TimeToNumber(min_length) <= TimeToNumber(all_videos["videos"][video][1]) <= TimeToNumber(max_length):
                 if not title_words:
-                    videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False, "youtubeur": name})
+                    videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False, "youtubeur": true_name})
                 for word in title_words:
                     if len(all_videos["videos"][video][0].lower().split(word)) > 1:
-                        videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False, "youtubeur": name})
+                        videos.append({"id": video, "title": all_videos["videos"][video][0], "duration": all_videos["videos"][video][1], "download": False, "youtubeur": true_name})
                         break
     return videos
 
