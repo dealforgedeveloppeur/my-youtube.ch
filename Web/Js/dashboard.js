@@ -101,8 +101,8 @@ async function checkTokenAndPost() {
             }
         });
         const json = await res.json();
-        if (res.ok) {
-            window.location.href='/my-youtube/dashboard';
+        if !(res.ok) {
+            window.location.href='/my-youtube/login';
         }
     }
 }
